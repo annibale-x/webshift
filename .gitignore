@@ -1,0 +1,26 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo lock (binary crate — keep it; library consumers regenerate)
+# Cargo.lock is committed for the workspace
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Debug
+*.log
+
+# Environment
+.env
+.env.*
