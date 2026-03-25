@@ -529,13 +529,13 @@ pub struct QueryResult {
 
 ### M1 — Core library: fetch + clean (1 week)
 
-- [ ] Workspace setup: add `robot` crate, feature flags skeleton, shared version
+- [x] Workspace setup: add `robot` crate, feature flags skeleton, shared version
 - [ ] `config.rs` — serde config with toml + env + clap
-- [ ] `scraper/cleaner.rs` — html5ever/scraper HTML cleaning + text sterilization pipeline
-- [ ] `scraper/fetcher.rs` — reqwest concurrent fetcher with streaming cap, UA rotation, retry
-- [ ] `utils/url.rs` — sanitize, dedup, binary filter, domain filter
-- [ ] `lib.rs` — `webgate::clean()` and `webgate::fetch()` public API
-- [ ] `robot` — `bump`, `promote`, `unpromote`, `publish` commands
+- [x] `scraper/cleaner.rs` — html5ever/scraper HTML cleaning + text sterilization pipeline
+- [x] `scraper/fetcher.rs` — reqwest concurrent fetcher with streaming cap, UA rotation, retry
+- [x] `utils/url.rs` — sanitize, dedup, binary filter, domain filter
+- [x] `lib.rs` — `webgate::clean()` and `webgate::fetch()` public API
+- [x] `robot` — `bump`, `test`, `promote`, `unpromote`, `publish` commands
 - [ ] Tests: cleaner (port from Python test suite), fetcher (mock server)
 - [ ] **Deliverable:** `webgate` crate compiles and passes tests; `robot` operational
 
