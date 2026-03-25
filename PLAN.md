@@ -1,30 +1,30 @@
-# PLAN.RS.md — Rust Port of mcp-webgate
+# PLAN.RS.md — Rust Port of mcp-webshift
 
-> **Repo:** `annibale-x/webgate`
-> **Crates:** `webgate` (library) + `webgate-mcp` (MCP server binary)
+> **Repo:** `annibale-x/webshift`
+> **Crates:** `webshift` (library) + `webshift-mcp` (MCP server binary)
 > **Target:** Standalone native binary for AI agents — zero runtime dependencies.
 
 ---
 
 ## 1. Rationale
 
-The Python version of mcp-webgate works and is feature-complete (Phase 1–4). The Rust
+The Python version of mcp-webshift works and is feature-complete (Phase 1–4). The Rust
 port addresses a different set of problems:
 
 - **Distribution:** A single static binary replaces the Python+pip+venv toolchain.
-  Agent config becomes `{ "command": "mcp-webgate" }` — nothing else to install.
-- **Embedding:** Agents written in Rust can call `webgate::fetch()`, `webgate::query()`
-  and `webgate::clean()` in-process, without spawning a subprocess or speaking JSON-RPC.
+  Agent config becomes `{ "command": "mcp-webshift" }` — nothing else to install.
+- **Embedding:** Agents written in Rust can call `webshift::fetch()`, `webshift::query()`
+  and `webshift::clean()` in-process, without spawning a subprocess or speaking JSON-RPC.
 - **Containers:** A scratch Docker image with one binary (~8 MB) replaces ~200 MB Python images.
 - **CI/Edge:** No interpreter setup step. Copy binary, run.
-- **Composability:** Other Rust crates can depend on `webgate` and build on top of it
+- **Composability:** Other Rust crates can depend on `webshift` and build on top of it
   (aggregators, proxy MCP servers, agent toolkits, RAG pipelines).
-- **HTML cleaning for LLM pipelines:** `webgate::clean()` is a first-class public API,
+- **HTML cleaning for LLM pipelines:** `webshift::clean()` is a first-class public API,
   usable standalone to strip noise elements and sterilize HTML into LLM-ready text.
   Removing excess markup can reduce token usage by ~70% while preserving all meaningful
   content — useful for any Rust project that processes web content with an LLM.
 
-The Python version continues to exist on PyPI as `mcp-webgate`. This is not a replacement,
+The Python version continues to exist on PyPI as `mcp-webshift`. This is not a replacement,
 it is a native alternative.
 
 ---
@@ -32,15 +32,15 @@ it is a native alternative.
 ## 2. Workspace layout
 
 ```
-webgate/                            # repo root
+webshift/                            # repo root
 ├── Cargo.toml                      # workspace definition
 ├── CLAUDE.md
 ├── PLAN.md
 ├── README.md
-├── webgate.toml.example            # example config
+├── webshift.toml.example            # example config
 │
 ├── crates/
-│   ├── webgate/                    # library crate (crates.io: webgate)
+│   ├── webshift/                    # library crate (crates.io: webshift)
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs              # public API: fetch(), query(), clean(), Config
@@ -69,11 +69,11 @@ webgate/                            # repo root
 │   │           ├── url.rs          # sanitize, dedup, binary filter, domain filter
 │   │           └── reranker.rs     # BM25 deterministic + LLM reranking
 │   │
-│   ├── webgate-mcp/                # binary crate (crates.io: webgate-mcp)
+│   ├── webshift-mcp/                # binary crate (crates.io: webshift-mcp)
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       └── main.rs             # MCP server: tool registration, stdio transport
-│   │                               # [[bin]] name = "mcp-webgate"
+│   │                               # [[bin]] name = "mcp-webshift"
 │   │
 │   └── robot/                      # internal dev tool (publish = false)
 │       ├── Cargo.toml
@@ -97,7 +97,7 @@ webgate/                            # repo root
 
 ## 3. Dependency map
 
-### `webgate` (library)
+### `webshift` (library)
 
 | Python | Rust crate | Purpose | Notes |
 |--------|-----------|---------|-------|
@@ -115,18 +115,18 @@ webgate/                            # repo root
 > This enables static binaries on all targets without system package requirements,
 > and keeps the door open for a future `wasm32-wasi` feature-flagged build.
 
-### `webgate-mcp` (binary)
+### `webshift-mcp` (binary)
 
 | Dependency | Purpose |
 |-----------|---------|
-| `webgate` | The library (all features enabled) |
+| `webshift` | The library (all features enabled) |
 | **`rmcp`** | MCP server, stdio transport, tool registration (official Anthropic Rust SDK) |
 | **`clap`** | CLI argument parsing |
 | **`tokio`** (full) | Async runtime |
 
 ### Feature flags
 
-The `webgate` library uses Cargo feature flags to keep the default footprint minimal:
+The `webshift` library uses Cargo feature flags to keep the default footprint minimal:
 
 | Feature | Default | Enables |
 |---------|---------|---------|
@@ -136,10 +136,10 @@ The `webgate` library uses Cargo feature flags to keep the default footprint min
 Users who want only the cleaner or the fetcher add:
 
 ```toml
-webgate = { version = "0.1", default-features = false }
+webshift = { version = "0.1", default-features = false }
 ```
 
-`webgate-mcp` enables all features.
+`webshift-mcp` enables all features.
 
 ---
 
@@ -206,7 +206,7 @@ Alternatives considered and rejected:
 
 **Python reference:** `config.py` (358 lines)
 
-Port the three-level config resolution: **CLI args > env vars > `webgate.toml` > defaults**.
+Port the three-level config resolution: **CLI args > env vars > `webshift.toml` > defaults**.
 
 ```rust
 #[derive(Debug, Deserialize, Clone)]
@@ -240,8 +240,8 @@ pub struct ServerConfig {
 ```
 
 **Resolution chain:**
-1. Parse `webgate.toml` with `toml::from_str()` into `Config`
-2. Walk `WEBGATE_*` env vars, override matching fields
+1. Parse `webshift.toml` with `toml::from_str()` into `Config`
+2. Walk `WEBSHIFT_*` env vars, override matching fields
 3. Parse CLI with `clap`, override non-None values
 
 Use `clap` derive macros with `Option<T>` for all fields so "not provided" is distinguishable
@@ -399,21 +399,21 @@ Fallback to `[query]` on any error.
 
 Build context from sources, send prompt to LLM, return Markdown string.
 
-### 5.11 `main.rs` — MCP server (webgate-mcp crate)
+### 5.11 `main.rs` — MCP server (webshift-mcp crate)
 
 **Python reference:** `server.py` (246 lines)
 
 Register three MCP tools:
-- `webgate_onboarding()` — return operational guide JSON
-- `webgate_fetch(url, max_chars?)` — single page fetch
-- `webgate_query(queries, num_results_per_query?, lang?, backend?)` — full pipeline
+- `webshift_onboarding()` — return operational guide JSON
+- `webshift_fetch(url, max_chars?)` — single page fetch
+- `webshift_query(queries, num_results_per_query?, lang?, backend?)` — full pipeline
 
 Use `rmcp` (official Anthropic Rust MCP SDK) for:
 - Tool schema registration
 - Stdio transport
 - JSON-RPC handling
 
-The binary name is `mcp-webgate` (configured in `Cargo.toml` `[[bin]]`).
+The binary name is `mcp-webshift` (configured in `Cargo.toml` `[[bin]]`).
 
 ---
 
@@ -439,7 +439,7 @@ These are the core value proposition. Every protection must exist in the Rust po
 
 ```bash
 # Linux/macOS/Windows — no system packages required (pure Rust)
-cargo run -p webgate-mcp -- --default-backend searxng
+cargo run -p webshift-mcp -- --default-backend searxng
 ```
 
 ### CI release builds (static linking)
@@ -460,38 +460,38 @@ Output: 5 self-contained binaries attached to GitHub Release. No runtime depende
 
 ```bash
 # From crates.io
-cargo install webgate-mcp
+cargo install webshift-mcp
 
 # From GitHub Release (prebuilt)
-curl -L https://github.com/annibale-x/webgate/releases/latest/download/mcp-webgate-x86_64-unknown-linux-gnu -o mcp-webgate
-chmod +x mcp-webgate
+curl -L https://github.com/annibale-x/webshift/releases/latest/download/mcp-webshift-x86_64-unknown-linux-gnu -o mcp-webshift
+chmod +x mcp-webshift
 
 # Agent config (Claude Code, Gemini CLI, etc.)
-{ "command": "mcp-webgate", "args": ["--config", "webgate.toml"] }
+{ "command": "mcp-webshift", "args": ["--config", "webshift.toml"] }
 ```
 
 ---
 
 ## 8. API contract (library crate)
 
-The `webgate` crate exposes a high-level async API:
+The `webshift` crate exposes a high-level async API:
 
 ```rust
-use webgate::{Config, FetchResult, QueryResult, CleanResult};
+use webshift::{Config, FetchResult, QueryResult, CleanResult};
 
 // Load config from file + env
 let config = Config::load()?;
 
 // Standalone HTML cleaning (no feature flags required)
-let result: CleanResult = webgate::clean(raw_html, 8000);
+let result: CleanResult = webshift::clean(raw_html, 8000);
 println!("{}", result.text); // LLM-ready plain text
 
 // Single page fetch + clean
-let result: FetchResult = webgate::fetch("https://example.com", &config).await?;
+let result: FetchResult = webshift::fetch("https://example.com", &config).await?;
 println!("{}", result.text);
 
 // Full search pipeline (requires `backends` feature)
-let result: QueryResult = webgate::query(
+let result: QueryResult = webshift::query(
     &["rust async patterns", "tokio best practices"],
     &config,
 ).await?;
@@ -542,19 +542,19 @@ pub struct QueryResult {
 - [x] `scraper/cleaner.rs` — html5ever/scraper HTML cleaning + text sterilization pipeline
 - [x] `scraper/fetcher.rs` — reqwest concurrent fetcher with streaming cap, UA rotation, retry
 - [x] `utils/url.rs` — sanitize, dedup, binary filter, domain filter
-- [x] `lib.rs` — `webgate::clean()` and `webgate::fetch()` public API
+- [x] `lib.rs` — `webshift::clean()` and `webshift::fetch()` public API
 - [x] `robot` — `bump`, `test`, `promote`, `unpromote`, `publish` commands
 - [x] Tests: cleaner (port from Python test suite), fetcher (mock server)
-- [x] **Deliverable:** `webgate` crate compiles and passes tests; `robot` operational
+- [x] **Deliverable:** `webshift` crate compiles and passes tests; `robot` operational
 
 ### M2 — MCP server with fetch tool (3 days)
 
-- [x] `main.rs` — MCP server with `webgate_fetch` tool via `rmcp`
-- [x] `webgate_onboarding` tool (static JSON)
+- [x] `main.rs` — MCP server with `webshift_fetch` tool via `rmcp`
+- [x] `webshift_onboarding` tool (static JSON)
 - [x] CLI argument parsing with clap
 - [x] Stdio transport working with Claude Code
 - [x] Tests: server construction, onboarding JSON, CLI parsing, param deserialization (10 new tests)
-- [x] **Deliverable:** `cargo install webgate-mcp` provides working `mcp-webgate` binary with fetch
+- [x] **Deliverable:** `cargo install webshift-mcp` provides working `mcp-webshift` binary with fetch
 
 ### M3 — Search backends + query pipeline (1 week)
 
@@ -566,8 +566,8 @@ pub struct QueryResult {
 - [x] `backends/serpapi.rs`
 - [x] `utils/reranker.rs` — BM25 deterministic reranking + adaptive budget redistribution
 - [x] Full query pipeline: search → dedup → fetch → clean → rerank → assemble
-- [x] `webgate_query` MCP tool (with `StringOrList` queries param)
-- [x] `webgate::query()` and `webgate::query_with_options()` public library API
+- [x] `webshift_query` MCP tool (with `StringOrList` queries param)
+- [x] `webshift::query()` and `webshift::query_with_options()` public library API
 - [x] Tests: backend factory (4), SearXNG mock (4), BM25 reranker (6), pipeline integration (8), MCP query params (3)
 - [x] **Deliverable:** Feature parity with Python Phase 1–3 (no LLM)
 
@@ -592,10 +592,10 @@ pub struct QueryResult {
 
 - [ ] GitHub Actions `ci.yml` — test on ubuntu/windows/macos
 - [ ] GitHub Actions `release.yml` — cross-compile 5 targets (pure Rust, no C deps)
-- [ ] Publish `webgate` + `webgate-mcp` on crates.io
+- [ ] Publish `webshift` + `webshift-mcp` on crates.io
 - [ ] README with installation instructions + standalone cleaner usage examples
 - [ ] docs.rs: annotate feature-gated API with `#[cfg_attr(docsrs, doc(cfg(feature = "...")))]` on `llm` and `backends` modules
-- [ ] **Deliverable:** Prebuilt binaries on GitHub Releases, `cargo install webgate-mcp` works
+- [ ] **Deliverable:** Prebuilt binaries on GitHub Releases, `cargo install webshift-mcp` works
 
 ### M6 — Zed extension (optional, 2 days)
 
@@ -622,7 +622,7 @@ pub struct QueryResult {
 | Live: LLM | `#[ignore]` + `test.toml` | Real LLM expansion, summarization, full pipeline |
 | Live: fetch | `#[ignore]` | Single page fetch against real URL |
 | Harness | `robot harness` | Diagnostic runner with BM25 scores, budget allocation, timing |
-| E2E: MCP | subprocess | Spawn `mcp-webgate`, send JSON-RPC via stdin, verify stdout |
+| E2E: MCP | subprocess | Spawn `mcp-webshift`, send JSON-RPC via stdin, verify stdout |
 
 ---
 
@@ -673,9 +673,9 @@ Undoes the last promote (use immediately after a bad promote).
 
 Publishes both crates to crates.io. Use after `promote`, starting from M5.
 
-1. `cargo publish -p webgate`
+1. `cargo publish -p webshift`
 2. Wait for crates.io index propagation (~15 s).
-3. `cargo publish -p webgate-mcp`
+3. `cargo publish -p webshift-mcp`
 
 #### `robot harness <query> [options]`
 
@@ -702,13 +702,13 @@ declare `version.workspace = true`. A single `robot bump` call is sufficient.
 1. **MCP SDK:** `rmcp` is the official Anthropic Rust SDK as of 2025. Use it from M2 onward.
    Monitor for breaking changes on the 0.x series.
 
-2. **WASM target for `webgate` library:** With the switch to pure-Rust `scraper`/html5ever,
+2. **WASM target for `webshift` library:** With the switch to pure-Rust `scraper`/html5ever,
    a `wasm32-wasi` build is now architecturally possible. Gated behind a feature flag
    (`wasm`) and out of scope for initial release, but no longer blocked by C deps.
 
 3. **Feature flags:** `llm` feature is optional (see §3). Consider also making individual
    backends opt-in for users who only need one search provider.
 
-4. **`webgate::clean()` as a standalone use case:** The cleaner is exposed as a first-class
+4. **`webshift::clean()` as a standalone use case:** The cleaner is exposed as a first-class
    public API (not just an internal step). This opens a secondary audience: any Rust project
    doing HTML → LLM text conversion, independently of the MCP or search features.

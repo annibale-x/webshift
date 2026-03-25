@@ -1711,13 +1711,13 @@ dependencies = [
 
 [[package]]
 name = "robot"
-version = "0.1.11"
+version = "0.1.12"
 dependencies = [
  "clap",
  "serde",
  "tokio",
  "toml",
- "webgate",
+ "webshift",
 ]
 
 [[package]]
@@ -2639,8 +2639,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "webgate"
-version = "0.1.11"
+name = "webshift"
+version = "0.1.12"
 dependencies = [
  "async-trait",
  "dirs-next",
@@ -2660,8 +2660,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "webgate-mcp"
-version = "0.1.11"
+name = "webshift-mcp"
+version = "0.1.12"
 dependencies = [
  "clap",
  "rmcp",
@@ -2671,7 +2671,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
- "webgate",
+ "webshift",
 ]
 
 [[package]]

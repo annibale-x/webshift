@@ -1,35 +1,35 @@
-# WebGate
+# WebShift
 
-[![Crates.io](https://img.shields.io/crates/v/webgate.svg)](https://crates.io/crates/webgate)
+[![Crates.io](https://img.shields.io/crates/v/webshift.svg)](https://crates.io/crates/webshift)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-blueviolet)](https://spec.modelcontextprotocol.io/)
-[![Latest Release](https://img.shields.io/badge/release-v0.1.12-purple.svg)](https://github.com/annibale-x/webgate/releases/tag/v0.1.12)
-[![Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/annibale-x/webgate/issues)
+[![Latest Release](https://img.shields.io/badge/release-v0.2.0-purple.svg)](https://github.com/annibale-x/webshift/releases/tag/v0.2.0)
+[![Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/annibale-x/webshift/issues)
 
 ---
 
-## What is WebGate
+## What is WebShift
 
-WebGate is a Rust library and MCP server that turns noisy web pages into
+WebShift is a Rust library and MCP server that shifts noisy web pages into
 clean, right-sized text for LLM consumption.
 
 Raw HTML is mostly junk: scripts, ads, navigation menus, cookie banners,
 tracking pixels. Feeding it directly to an LLM floods the context window
 with tens of thousands of useless tokens and leaves no room for reasoning.
-WebGate strips all that noise, sterilizes the text, and enforces strict
+WebShift strips all that noise, sterilizes the text, and enforces strict
 size budgets so the model receives only the content that matters.
 
 ### What you get
 
-Depending on the features you enable, WebGate can be three things:
+Depending on the features you enable, WebShift can be three things:
 
 | Use case | Crate | Feature flags | What it does |
 |----------|-------|---------------|--------------|
-| **HTML denoiser** | `webgate` | `default-features = false` | `clean()` — pure Rust HTML-to-text pipeline. Strips noise elements, sterilizes Unicode/BiDi, collapses whitespace. Zero network, zero config. Drop into any Rust project that processes web content for LLMs. |
-| **Web content client** | `webgate` | `default` or `features = ["llm"]` | `fetch()` + `query()` — streaming HTTP fetcher with size caps, 8 search backends, BM25 reranking, optional LLM query expansion and summarization. Full pipeline from search query to structured results. |
-| **MCP server** | `webgate-mcp` | all features | Native binary (`mcp-webgate`) that exposes `webgate_query`, `webgate_fetch`, and `webgate_onboarding` over MCP stdio. Single static binary, zero runtime dependencies. |
+| **HTML denoiser** | `webshift` | `default-features = false` | `clean()` — pure Rust HTML-to-text pipeline. Strips noise elements, sterilizes Unicode/BiDi, collapses whitespace. Zero network, zero config. Drop into any Rust project that processes web content for LLMs. |
+| **Web content client** | `webshift` | `default` or `features = ["llm"]` | `fetch()` + `query()` — streaming HTTP fetcher with size caps, 8 search backends, BM25 reranking, optional LLM query expansion and summarization. Full pipeline from search query to structured results. |
+| **MCP server** | `webshift-mcp` | all features | Native binary (`mcp-webshift`) that exposes `webshift_query`, `webshift_fetch`, and `webshift_onboarding` over MCP stdio. Single static binary, zero runtime dependencies. |
 
-### When to use WebGate
+### When to use WebShift
 
 - You're building an AI agent that needs web search and you want clean,
   budget-controlled text — not raw HTML.
@@ -40,12 +40,12 @@ Depending on the features you enable, WebGate can be three things:
 - You need hard guarantees on output size: per-page caps, total budget
   caps, streaming download limits.
 
-### When NOT to use WebGate
+### When NOT to use WebShift
 
 - You need a headless browser that renders JavaScript-heavy SPAs.
-  WebGate parses static HTML — it doesn't execute JS.
+  WebShift parses static HTML — it doesn't execute JS.
 - You need to preserve the visual layout or formatting of a page
-  (tables, CSS grids, positioning). WebGate extracts text, not structure.
+  (tables, CSS grids, positioning). WebShift extracts text, not structure.
 - You're building a web scraper that needs to navigate across pages,
   fill forms, or handle authentication flows.
 
@@ -87,28 +87,28 @@ For a detailed explanation of each pipeline stage, BM25 parameters, adaptive bud
 ### Binary (MCP server)
 
 ```bash
-cargo install webgate-mcp
+cargo install webshift-mcp
 ```
 
-The binary is called `mcp-webgate`.
+The binary is called `mcp-webshift`.
 
 ### From source
 
 ```bash
-cargo install --path crates/webgate-mcp
+cargo install --path crates/webshift-mcp
 ```
 
 ### As a library
 
 ```toml
 # Full pipeline (search + fetch + clean + rerank)
-webgate = "0.1"
+webshift = "0.1"
 
 # Cleaner + fetcher only (no search backends)
-webgate = { version = "0.1", default-features = false }
+webshift = { version = "0.1", default-features = false }
 
 # Everything including LLM features
-webgate = { version = "0.1", features = ["llm"] }
+webshift = { version = "0.1", features = ["llm"] }
 ```
 
 ---
@@ -130,15 +130,15 @@ No Docker? Use a cloud backend — see [Search backends](#search-backends).
 ```json
 {
   "mcpServers": {
-    "webgate": {
-      "command": "mcp-webgate",
+    "webshift": {
+      "command": "mcp-webshift",
       "args": ["--default-backend", "searxng"]
     }
   }
 }
 ```
 
-That's it. The agent now has `webgate_query`, `webgate_fetch`, and `webgate_onboarding`.
+That's it. The agent now has `webshift_query`, `webshift_fetch`, and `webshift_onboarding`.
 
 For client-specific setup see [docs/integrations/](docs/integrations/).
 
@@ -148,11 +148,11 @@ For client-specific setup see [docs/integrations/](docs/integrations/).
 
 | Tool | Description |
 |------|-------------|
-| `webgate_query` | Full search pipeline: search + fetch + clean + rerank + (optional) summarize |
-| `webgate_fetch` | Single page fetch and clean |
-| `webgate_onboarding` | Returns a JSON guide for the agent (budgets, backends, tips) |
+| `webshift_query` | Full search pipeline: search + fetch + clean + rerank + (optional) summarize |
+| `webshift_fetch` | Single page fetch and clean |
+| `webshift_onboarding` | Returns a JSON guide for the agent (budgets, backends, tips) |
 
-### `webgate_query` parameters
+### `webshift_query` parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -168,8 +168,8 @@ For client-specific setup see [docs/integrations/](docs/integrations/).
 Resolution order (highest priority first):
 
 1. **CLI args** — `--default-backend`, `--brave-api-key`, etc.
-2. **Environment variables** — `WEBGATE_*` prefix
-3. **Config file** — `webgate.toml` (current dir, then `~/webgate.toml`)
+2. **Environment variables** — `WEBSHIFT_*` prefix
+3. **Config file** — `webshift.toml` (current dir, then `~/webshift.toml`)
 4. **Built-in defaults**
 
 ### Config file
@@ -242,15 +242,15 @@ Ready-to-use config examples are in [Use Cases](docs/USE_CASES.md) and [`example
 ### Key environment variables
 
 ```bash
-WEBGATE_DEFAULT_BACKEND=searxng
-WEBGATE_SEARXNG_URL=http://localhost:4000
-WEBGATE_BRAVE_API_KEY=BSA-xxx
-WEBGATE_GOOGLE_API_KEY=xxx
-WEBGATE_GOOGLE_CX=xxx
-WEBGATE_BING_API_KEY=xxx
-WEBGATE_LLM_ENABLED=true
-WEBGATE_LLM_BASE_URL=http://localhost:11434/v1
-WEBGATE_LLM_MODEL=gemma3:27b
+WEBSHIFT_DEFAULT_BACKEND=searxng
+WEBSHIFT_SEARXNG_URL=http://localhost:4000
+WEBSHIFT_BRAVE_API_KEY=BSA-xxx
+WEBSHIFT_GOOGLE_API_KEY=xxx
+WEBSHIFT_GOOGLE_CX=xxx
+WEBSHIFT_BING_API_KEY=xxx
+WEBSHIFT_LLM_ENABLED=true
+WEBSHIFT_LLM_BASE_URL=http://localhost:11434/v1
+WEBSHIFT_LLM_MODEL=gemma3:27b
 ```
 
 ---
@@ -314,7 +314,7 @@ Always active — the core value proposition:
 ## Library usage
 
 ```rust
-use webgate::{Config, clean, fetch, query};
+use webshift::{Config, clean, fetch, query};
 
 // Clean raw HTML
 let result = clean("<html><body><p>Hello world</p></body></html>", 8000);
@@ -353,13 +353,13 @@ for source in &results.sources {
 
 ## Alpha Status
 
-WebGate is in **alpha**. Core functionality is stable and the server is used daily,
+WebShift is in **alpha**. Core functionality is stable and the server is used daily,
 but the API surface may still change before 1.0.
 
 **Feedback is very welcome.** If something doesn't work as expected, behaves oddly,
 or you have a use case that isn't covered:
 
-> [Open an issue on GitHub](https://github.com/annibale-x/webgate/issues)
+> [Open an issue on GitHub](https://github.com/annibale-x/webshift/issues)
 
 Bug reports, configuration questions, and feature requests all help shape the roadmap.
 
@@ -378,13 +378,13 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ## Links
 
-- **[GitHub Repository](https://github.com/annibale-x/webgate)** — Source code and issues
-<!-- - **[docs.rs](https://docs.rs/webgate)** — API documentation -->
-<!-- - **[MCP Registry](https://registry.modelcontextprotocol.io/?q=webgate&all=1)** — WebGate on Model Context Protocol Registry -->
+- **[GitHub Repository](https://github.com/annibale-x/webshift)** — Source code and issues
+<!-- - **[docs.rs](https://docs.rs/webshift)** — API documentation -->
+<!-- - **[MCP Registry](https://registry.modelcontextprotocol.io/?q=webshift&all=1)** — WebShift on Model Context Protocol Registry -->
 - **[MCP Protocol](https://modelcontextprotocol.io/specification/2025-11-25)** — Model Context Protocol specification
 
 ---
 
-**Need help?** Check the [documentation](docs/) or open an [issue](https://github.com/annibale-x/webgate/issues) on GitHub.
+**Need help?** Check the [documentation](docs/) or open an [issue](https://github.com/annibale-x/webshift/issues) on GitHub.
 
-<!-- mcp-name: io.github.annibale-x/mcp-webgate -->
+<!-- mcp-name: io.github.annibale-x/mcp-webshift -->

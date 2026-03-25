@@ -15,5 +15,5 @@ path = "src/main.rs"
 clap = { version = "4", features = ["derive"] }
 toml = "0.8"
 serde = { version = "1", features = ["derive"] }
-webgate = { path = "../webgate", features = ["backends", "llm"] }
+webshift = { path = "../webshift", features = ["backends", "llm"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

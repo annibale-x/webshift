@@ -1,0 +1,18 @@
+# webshift-brave.toml — Brave Search backend with LLM summarization
+#
+# Get a free API key at: https://brave.com/search/api/
+
+[backends]
+default = "brave"
+
+[backends.brave]
+api_key = "BSA-your-key-here"
+safesearch = 1
+
+[llm]
+enabled = true
+base_url = "https://api.openai.com/v1"
+api_key = "sk-your-key-here"
+model = "gpt-4o-mini"
+summarization_enabled = true
+expansion_enabled = false

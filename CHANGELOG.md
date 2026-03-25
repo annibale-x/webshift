@@ -11,6 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2026-03-25
+
+### Changed
+
+- Project renamed from `webgate` to `webshift` across the entire codebase
+- Crate names: `webgate` → `webshift`, `webgate-mcp` → `webshift-mcp`
+- Binary name: `mcp-webgate` → `mcp-webshift`
+- Config file: `webgate.toml` → `webshift.toml`
+- Environment variable prefix: `WEBGATE_*` → `WEBSHIFT_*`
+- MCP tool names: `webshift_onboarding`, `webshift_fetch`, `webshift_query`
+- Error type: `WebgateError` → `WebshiftError`
+- Repository moved to `github.com/annibale-x/webshift`
+
+### Added
+
+- GitHub Actions CI workflow (`ci.yml`): test on ubuntu/windows/macos with clippy
+- GitHub Actions release workflow (`release.yml`): cross-compile 5 targets, GitHub Release with prebuilt binaries
+- docs.rs annotations: `#[doc(cfg(feature = "..."))]` on feature-gated modules (`backends`, `llm`)
+- `[package.metadata.docs.rs]` configured with `all-features = true`
+- All clippy warnings resolved (`derivable_impls`, `collapsible_if`, `manual_flatten`, `map_or`)
+- First publish to crates.io: `webshift` (library) + `webshift-mcp` (MCP server binary)
+
+---
+
 ## [0.1.12] - 2026-03-25
 
 ### Added
@@ -39,12 +63,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI arguments for all search backends: `--searxng-url`, `--brave-api-key`, `--tavily-api-key`, `--exa-api-key`, `--serpapi-api-key` (Google and Bing already had CLI args) — enables per-instance backend configuration when running multiple IDE/agent instances
 - `robot bump` now automatically updates the version badge in README.md
 - `robot bump` stages README.md alongside Cargo.toml and CHANGELOG.md
-- `[package.metadata.docs.rs]` in webgate Cargo.toml — builds docs.rs documentation with all features enabled
+- `[package.metadata.docs.rs]` in webshift Cargo.toml — builds docs.rs documentation with all features enabled
 
 ### Changed
 
-- README.md rewritten with proper introduction: "What is WebGate" section explaining the three use cases (HTML denoiser, web content client, MCP server), "When to use / When NOT to use" guidance
-- Crates.io badge now points to `webgate` crate (was `webgate-mcp`)
+- README.md rewritten with proper introduction: "What is WebShift" section explaining the three use cases (HTML denoiser, web content client, MCP server), "When to use / When NOT to use" guidance
+- Crates.io badge now points to `webshift` crate (was `webshift-mcp`)
 - Status section updated from "Beta" to "Alpha" with correct issue tracker link
 - `docs/CONFIGURATION.md` backend tables now include CLI arg column for all backends
 - PLAN.md workspace layout updated: added `google.rs`, `bing.rs`, `http.rs` backends and `harness.rs`; added `robot harness` command documentation; added docs.rs annotation task to M5
@@ -67,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Default value of `server.adaptive_budget` changed from `false` to `"auto"`
-- `WEBGATE_ADAPTIVE_BUDGET` environment variable now accepts `"auto"`, `"on"`, `"off"` (in addition to `"true"`/`"false"` for backward compatibility)
+- `WEBSHIFT_ADAPTIVE_BUDGET` environment variable now accepts `"auto"`, `"on"`, `"off"` (in addition to `"true"`/`"false"` for backward compatibility)
 - `README.md` restructured with links to the three new documentation pages
 - Flat truncation in `lib.rs` now uses multibyte-safe `.chars().take(N)` instead of byte-slice truncation
 
@@ -82,13 +106,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `robot harness`: COMPRESSION block showing raw download → clean text → LLM summary sizes (KB) with percentage reduction at each stage
 - `robot harness`: `box_header()` helper with Unicode box-drawing characters for visual section separation
 - `robot harness`: CONTENT PREVIEWS block with per-source `TITLE:` / `PREVIEW:` fields at column 1
-- `robot harness`: full `#[ignore]` integration tests for Google, Bing, and HTTP backends in `crates/webgate/tests/`
+- `robot harness`: full `#[ignore]` integration tests for Google, Bing, and HTTP backends in `crates/webshift/tests/`
 
 ### Changed
 
 - `robot harness` output restructured: snippet pool → content previews → LLM summary → consolidated report at the bottom
 - `robot harness` SOURCES table: removed title/url columns (correlation via `[id]` citation in content previews); all rows start at column 1
-- `robot harness` banner changed to uppercase `WEBGATE HARNESS REPORT`
+- `robot harness` banner changed to uppercase `WEBSHIFT HARNESS REPORT`
 - Progress bars use Unicode block characters (`█`/`░`) instead of `#`
 - `fetch_timing` map is now fully propagated (both primary and gap-fill fetches) so `raw_bytes` includes all downloads
 - `language` in `lib.rs` resolved with config fallback: per-call `lang` overrides `ServerConfig.language`; empty string disables the hint
@@ -130,10 +154,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Integration test infrastructure: `test.toml` config with per-backend and LLM `enabled` flags for live tests
-- `TestConfig` struct with `to_webgate_config()` conversion (shared by tests and harness)
+- `TestConfig` struct with `to_webshift_config()` conversion (shared by tests and harness)
 - Live integration tests: 5 backend tests, 3 LLM pipeline tests, 1 fetch test (all `#[ignore]`, require `test.toml`)
 - `robot harness` subcommand — full pipeline runner with BM25 scores, budget stats, timing, consolidated report
-- Example configs: `webgate.toml`, `webgate-ollama.toml`, `webgate-minimal.toml`, `webgate-brave.toml`
+- Example configs: `webshift.toml`, `webshift-ollama.toml`, `webshift-minimal.toml`, `webshift-brave.toml`
 - Example MCP client configs: `claude-desktop.json`, `claude-desktop-ollama.json`
 - `test.toml.example` template for contributor integration testing
 
@@ -154,7 +178,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - LLM expansion integrated in query pipeline (single query input, `llm.expansion_enabled`)
 - LLM reranking integrated after BM25 (`llm.llm_rerank_enabled`)
 - LLM summarization integrated after reranking (`llm.summarization_enabled`); errors captured in `llm_summary_error` field
-- `webgate-mcp` now builds with `llm` feature enabled
+- `webshift-mcp` now builds with `llm` feature enabled
 - CLI args for all LLM settings: `--llm-enabled`, `--llm-model`, `--llm-base-url`, `--llm-api-key`, `--llm-timeout`, `--llm-expansion-enabled`, `--llm-summarization-enabled`, `--llm-rerank-enabled`, `--llm-max-summary-words`, `--llm-input-budget-factor`
 - Tests: `LlmClient` (4), expander (4), summarizer (2), `rerank_llm` (2), LLM pipeline (3), MCP LLM CLI args (1)
 
@@ -167,8 +191,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SearchBackend` trait + `create_backend` factory with 5 implementations: SearXNG, Brave, Tavily, Exa, SerpAPI
 - BM25 deterministic reranking + adaptive budget redistribution
 - Full query pipeline: search → dedup → fetch → clean → rerank → assemble with oversampling and gap filler
-- `webgate::query()` and `webgate::query_with_options()` public library API
-- `webgate_query` MCP tool with `StringOrList` queries param, backend override, and lang support
+- `webshift::query()` and `webshift::query_with_options()` public library API
+- `webshift_query` MCP tool with `StringOrList` queries param, backend override, and lang support
 - Tests: backend factory (4), SearXNG wiremock (4), BM25 reranker (6), pipeline integration (8), MCP query params (3)
 
 ---
@@ -189,8 +213,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `webgate_fetch` MCP tool via `rmcp` 1.x with stdio transport
-- `webgate_onboarding` MCP tool — operational guide JSON (matches Python implementation)
+- `webshift_fetch` MCP tool via `rmcp` 1.x with stdio transport
+- `webshift_onboarding` MCP tool — operational guide JSON (matches Python implementation)
 - CLI argument parsing with clap: `--config`, `--default-backend`, `--debug`, `--trace`, `--log-file`
 - MCP server instructions for AI agent guidance
 - `tracing-subscriber` logging to stderr or file
@@ -201,7 +225,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- TOML config loading + `WEBGATE_*` env var overrides
+- TOML config loading + `WEBSHIFT_*` env var overrides
 - Cleaner test suite: port of full Python test cases (12 tests)
 - Fetcher tests: wiremock retry — 429, 503, exhausted retries, 404 no-retry (6 tests)
 - Config tests: TOML parsing, env override, CLI override
@@ -212,21 +236,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Workspace scaffold: `webgate` (lib), `webgate-mcp` (bin), `robot` (dev tool)
+- Workspace scaffold: `webshift` (lib), `webshift-mcp` (bin), `robot` (dev tool)
 - `robot` commands: `bump`, `test`, `promote`, `unpromote`, `publish`
 - HTML cleaner with `scraper`/html5ever + text sterilization pipeline
 - `reqwest` concurrent fetcher with streaming cap, UA rotation, and retry
 - URL utils: sanitize, dedup, binary extension filter
-- `webgate::clean()` and `webgate::fetch()` public API
+- `webshift::clean()` and `webshift::fetch()` public API
 - Release profile with LTO, strip, and size optimization
 - `CLAUDE.md`, `CONTRIBUTING.md`, `PLAN.md`
 
-[Unreleased]: https://github.com/annibale-x/webgate/compare/v0.1.8...HEAD
-[0.1.8]: https://github.com/annibale-x/webgate/compare/v0.1.7...v0.1.8
-[0.1.7]: https://github.com/annibale-x/webgate/compare/v0.1.6...v0.1.7
-[0.1.6]: https://github.com/annibale-x/webgate/compare/v0.1.5...v0.1.6
-[0.1.5]: https://github.com/annibale-x/webgate/compare/v0.1.4...v0.1.5
-[0.1.4]: https://github.com/annibale-x/webgate/compare/v0.1.3...v0.1.4
-[0.1.3]: https://github.com/annibale-x/webgate/compare/v0.1.2...v0.1.3
-[0.1.2]: https://github.com/annibale-x/webgate/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/annibale-x/webgate/releases/tag/v0.1.1
+[Unreleased]: https://github.com/annibale-x/webshift/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/annibale-x/webshift/compare/v0.1.7...v0.1.8
+[0.1.7]: https://github.com/annibale-x/webshift/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/annibale-x/webshift/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/annibale-x/webshift/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/annibale-x/webshift/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/annibale-x/webshift/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/annibale-x/webshift/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/annibale-x/webshift/releases/tag/v0.1.1

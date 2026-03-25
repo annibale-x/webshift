@@ -1,9 +1,0 @@
-# webgate-minimal.toml — minimal config with SearXNG only
-#
-# No LLM, no API keys. Just search + fetch + clean + BM25 rerank.
-
-[backends]
-default = "searxng"
-
-[backends.searxng]
-url = "http://localhost:4000"

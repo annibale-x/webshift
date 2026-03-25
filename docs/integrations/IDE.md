@@ -4,16 +4,16 @@ Covers configuration for desktop AI clients and IDEs that support the Model Cont
 
 ## Prerequisites
 
-The `mcp-webgate` binary must be installed and on your PATH:
+The `mcp-webshift` binary must be installed and on your PATH:
 
 ```bash
-cargo install webgate-mcp
+cargo install webshift-mcp
 ```
 
 Or from source:
 
 ```bash
-cargo install --path crates/webgate-mcp
+cargo install --path crates/webshift-mcp
 ```
 
 You also need a [search backend](../../README.md#search-backends). The easiest option is SearXNG:
@@ -37,8 +37,8 @@ Open the config file:
 ```json
 {
   "mcpServers": {
-    "webgate": {
-      "command": "mcp-webgate",
+    "webshift": {
+      "command": "mcp-webshift",
       "args": ["--default-backend", "searxng"]
     }
   }
@@ -50,8 +50,8 @@ With a cloud backend:
 ```json
 {
   "mcpServers": {
-    "webgate": {
-      "command": "mcp-webgate",
+    "webshift": {
+      "command": "mcp-webshift",
       "args": ["--default-backend", "brave", "--brave-api-key", "BSA..."]
     }
   }
@@ -63,8 +63,8 @@ With LLM summarization (Ollama):
 ```json
 {
   "mcpServers": {
-    "webgate": {
-      "command": "mcp-webgate",
+    "webshift": {
+      "command": "mcp-webshift",
       "args": [
         "--default-backend", "searxng",
         "--llm-enabled",
@@ -79,15 +79,15 @@ With LLM summarization (Ollama):
 
 **After editing**: completely quit and restart Claude Desktop.
 
-**Troubleshooting — "spawn mcp-webgate ENOENT"**: Claude Desktop has a restricted PATH. Use the full binary path:
+**Troubleshooting — "spawn mcp-webshift ENOENT"**: Claude Desktop has a restricted PATH. Use the full binary path:
 
 ```bash
-which mcp-webgate   # macOS/Linux
-where mcp-webgate   # Windows
+which mcp-webshift   # macOS/Linux
+where mcp-webshift   # Windows
 ```
 
 ```json
-{ "command": "/home/yourname/.cargo/bin/mcp-webgate" }
+{ "command": "/home/yourname/.cargo/bin/mcp-webshift" }
 ```
 
 ---
@@ -99,8 +99,8 @@ Create `.mcp.json` in your project folder (or `~/.mcp.json` for global config):
 ```json
 {
   "mcpServers": {
-    "webgate": {
-      "command": "mcp-webgate",
+    "webshift": {
+      "command": "mcp-webshift",
       "args": ["--default-backend", "searxng"]
     }
   }
@@ -110,7 +110,7 @@ Create `.mcp.json` in your project folder (or `~/.mcp.json` for global config):
 Or add via CLI:
 
 ```bash
-claude mcp add webgate -- mcp-webgate --default-backend searxng
+claude mcp add webshift -- mcp-webshift --default-backend searxng
 ```
 
 ---
@@ -122,9 +122,9 @@ Add to `~/.config/zed/settings.json`:
 ```json
 {
   "context_servers": {
-    "webgate": {
+    "webshift": {
       "command": {
-        "path": "mcp-webgate",
+        "path": "mcp-webshift",
         "args": ["--default-backend", "searxng"]
       }
     }
@@ -143,8 +143,8 @@ Create `.cursor/mcp.json` in your project root (or `~/.cursor/mcp.json` for glob
 ```json
 {
   "mcpServers": {
-    "webgate": {
-      "command": "mcp-webgate",
+    "webshift": {
+      "command": "mcp-webshift",
       "args": ["--default-backend", "searxng"]
     }
   }
@@ -162,8 +162,8 @@ Edit `~/.codeium/windsurf/mcp_config.json` (Windows: `C:\Users\<user>\.codeium\w
 ```json
 {
   "mcpServers": {
-    "webgate": {
-      "command": "mcp-webgate",
+    "webshift": {
+      "command": "mcp-webshift",
       "args": ["--default-backend", "searxng"]
     }
   }
@@ -181,8 +181,8 @@ Create `.vscode/mcp.json` in your workspace root:
 ```json
 {
   "servers": {
-    "webgate": {
-      "command": "mcp-webgate",
+    "webshift": {
+      "command": "mcp-webshift",
       "args": ["--default-backend", "searxng"]
     }
   }
@@ -195,13 +195,13 @@ Create `.vscode/mcp.json` in your workspace root:
 
 ## Multi-instance setup
 
-Running webgate in multiple IDEs simultaneously? Use CLI args — each instance gets independent config and integers stay integers (no string-wrapping):
+Running webshift in multiple IDEs simultaneously? Use CLI args — each instance gets independent config and integers stay integers (no string-wrapping):
 
 ```json
 {
   "mcpServers": {
-    "webgate": {
-      "command": "mcp-webgate",
+    "webshift": {
+      "command": "mcp-webshift",
       "args": [
         "--default-backend", "searxng",
         "--llm-enabled",
@@ -213,9 +213,9 @@ Running webgate in multiple IDEs simultaneously? Use CLI args — each instance 
 }
 ```
 
-Precedence: `CLI args > env vars > webgate.toml > defaults`
+Precedence: `CLI args > env vars > webshift.toml > defaults`
 
-Full reference: `mcp-webgate --help`
+Full reference: `mcp-webshift --help`
 
 ---
 
