@@ -134,6 +134,27 @@ fn write_workspace_version(new_version: &str) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
+fn update_readme_version_badge(
+    old_version: &str,
+    new_version: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let content = std::fs::read_to_string("README.md")?;
+    // Match the hardcoded "Latest Release" badge: release-vX.Y.Z-purple and /tag/vX.Y.Z
+    let old_badge = format!("release-v{}-purple.svg", old_version);
+    let new_badge = format!("release-v{}-purple.svg", new_version);
+    let old_tag = format!("/releases/tag/v{}", old_version);
+    let new_tag = format!("/releases/tag/v{}", new_version);
+    if !content.contains(&old_badge) {
+        eprintln!("  warning: version badge not found in README.md, skipping");
+        return Ok(());
+    }
+    let updated = content
+        .replace(&old_badge, &new_badge)
+        .replace(&old_tag, &new_tag);
+    std::fs::write("README.md", updated)?;
+    Ok(())
+}
+
 // ---------------------------------------------------------------------------
 // Shell helpers
 // ---------------------------------------------------------------------------
@@ -178,10 +199,11 @@ fn cmd_bump(explicit: Option<String>) -> Result<(), Box<dyn std::error::Error>> 
 
     println!("bump: {} → {}", current, new_version);
     write_workspace_version(&new_version)?;
+    update_readme_version_badge(&current, &new_version)?;
 
-    // Stage all tracked changes + CHANGELOG + Cargo files
+    // Stage all tracked changes + CHANGELOG + Cargo files + README
     run_cmd("git", &["add", "-u"])?;
-    run_cmd("git", &["add", "CHANGELOG.md", "Cargo.toml", "Cargo.lock"])?;
+    run_cmd("git", &["add", "CHANGELOG.md", "Cargo.toml", "Cargo.lock", "README.md"])?;
     run_cmd(
         "git",
         &[

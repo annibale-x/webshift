@@ -1,12 +1,53 @@
-# webgate
+# WebGate
 
-[![Crates.io](https://img.shields.io/crates/v/webgate-mcp.svg)](https://crates.io/crates/webgate-mcp)
+[![Crates.io](https://img.shields.io/crates/v/webgate.svg)](https://crates.io/crates/webgate)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-blueviolet)](https://spec.modelcontextprotocol.io/)
+[![Latest Release](https://img.shields.io/badge/release-v0.1.11-purple.svg)](https://github.com/annibale-x/webgate/releases/tag/v0.1.11)
+[![Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/annibale-x/webgate/issues)
 
-**Denoised web search library and MCP server** — native Rust port of [mcp-webgate](https://github.com/annibale-x/mcp-webgate).
+---
 
-Single static binary, zero runtime dependencies. Feeds clean, right-sized web content to LLM agents without flooding the context window.
+## What is WebGate
+
+WebGate is a Rust library and MCP server that turns noisy web pages into
+clean, right-sized text for LLM consumption.
+
+Raw HTML is mostly junk: scripts, ads, navigation menus, cookie banners,
+tracking pixels. Feeding it directly to an LLM floods the context window
+with tens of thousands of useless tokens and leaves no room for reasoning.
+WebGate strips all that noise, sterilizes the text, and enforces strict
+size budgets so the model receives only the content that matters.
+
+### What you get
+
+Depending on the features you enable, WebGate can be three things:
+
+| Use case | Crate | Feature flags | What it does |
+|----------|-------|---------------|--------------|
+| **HTML denoiser** | `webgate` | `default-features = false` | `clean()` — pure Rust HTML-to-text pipeline. Strips noise elements, sterilizes Unicode/BiDi, collapses whitespace. Zero network, zero config. Drop into any Rust project that processes web content for LLMs. |
+| **Web content client** | `webgate` | `default` or `features = ["llm"]` | `fetch()` + `query()` — streaming HTTP fetcher with size caps, 8 search backends, BM25 reranking, optional LLM query expansion and summarization. Full pipeline from search query to structured results. |
+| **MCP server** | `webgate-mcp` | all features | Native binary (`mcp-webgate`) that exposes `webgate_query`, `webgate_fetch`, and `webgate_onboarding` over MCP stdio. Single static binary, zero runtime dependencies. |
+
+### When to use WebGate
+
+- You're building an AI agent that needs web search and you want clean,
+  budget-controlled text — not raw HTML.
+- You're processing web pages in a Rust pipeline and need a reliable
+  HTML-to-text cleaner that strips noise without losing real content.
+- You want an MCP web search server that works as a single binary —
+  no Python, no pip, no venv, no Docker (unless you want it).
+- You need hard guarantees on output size: per-page caps, total budget
+  caps, streaming download limits.
+
+### When NOT to use WebGate
+
+- You need a headless browser that renders JavaScript-heavy SPAs.
+  WebGate parses static HTML — it doesn't execute JS.
+- You need to preserve the visual layout or formatting of a page
+  (tables, CSS grids, positioning). WebGate extracts text, not structure.
+- You're building a web scraper that needs to navigate across pages,
+  fill forms, or handle authentication flows.
 
 ---
 
@@ -14,27 +55,27 @@ Single static binary, zero runtime dependencies. Feeds clean, right-sized web co
 
 ```
 Question
-  │
-  ├─ (optional) LLM query expansion → multiple search variants
-  │
-  ├─ Search via backend (SearXNG, Brave, Tavily, Exa, SerpAPI, Google, Bing, HTTP)
-  │
-  ├─ Deduplicate + filter binary URLs
-  │
-  ├─ Streaming fetch with per-page size cap
-  │
-  ├─ HTML cleaning → plain text (noise elements, scripts, nav removed)
-  │
-  ├─ Unicode/BiDi sterilization
-  │
-  ├─ BM25 deterministic reranking
-  │   └─ (optional) LLM-assisted tier-2 reranking
-  │
-  ├─ Budget-aware truncation across all sources
-  │
-  ├─ (optional) LLM Markdown summary with inline citations
-  │
-  └─ Structured JSON output
+  |
+  +- (optional) LLM query expansion -> multiple search variants
+  |
+  +- Search via backend (SearXNG, Brave, Tavily, Exa, SerpAPI, Google, Bing, HTTP)
+  |
+  +- Deduplicate + filter binary URLs
+  |
+  +- Streaming fetch with per-page size cap
+  |
+  +- HTML cleaning -> plain text (noise elements, scripts, nav removed)
+  |
+  +- Unicode/BiDi sterilization
+  |
+  +- BM25 deterministic reranking
+  |   +- (optional) LLM-assisted tier-2 reranking
+  |
+  +- Budget-aware truncation across all sources
+  |
+  +- (optional) LLM Markdown summary with inline citations
+  |
+  +- Structured JSON output
 ```
 
 For a detailed explanation of each pipeline stage, BM25 parameters, adaptive budget allocation, and real compression metrics see [Under the Hood](docs/UNDER_THE_HOOD.md). For the full configuration reference (TOML, env vars, CLI args) see [Configuration](docs/CONFIGURATION.md). For ready-to-use examples see [Use Cases](docs/USE_CASES.md).
@@ -126,7 +167,7 @@ For client-specific setup see [docs/integrations/](docs/integrations/).
 
 Resolution order (highest priority first):
 
-1. **CLI args** — `--default-backend`, `--debug`, etc.
+1. **CLI args** — `--default-backend`, `--brave-api-key`, etc.
 2. **Environment variables** — `WEBGATE_*` prefix
 3. **Config file** — `webgate.toml` (current dir, then `~/webgate.toml`)
 4. **Built-in defaults**
@@ -222,7 +263,7 @@ WEBGATE_LLM_MODEL=gemma3:27b
 | **Brave** | API key | Free tier. [brave.com/search/api](https://brave.com/search/api/) |
 | **Tavily** | API key | AI-oriented. [tavily.com](https://tavily.com/) |
 | **Exa** | API key | Neural search. [exa.ai](https://exa.ai/) |
-| **SerpAPI** | API key | Multi-engine proxy (Google, Bing, DDG…). [serpapi.com](https://serpapi.com/) |
+| **SerpAPI** | API key | Multi-engine proxy (Google, Bing, DDG...). [serpapi.com](https://serpapi.com/) |
 | **Google** | API key + CX | Custom Search. Free: 100 req/day. [programmablesearchengine.google.com](https://programmablesearchengine.google.com/) |
 | **Bing** | API key | Web Search API. Free: 1,000 req/month. [Microsoft Azure](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) |
 | **HTTP** | configurable | Generic REST backend — no code required, TOML-only config |
@@ -235,7 +276,7 @@ All opt-in — disabled by default, no data leaves your machine unless enabled.
 
 | Feature | What it does |
 |---------|-------------|
-| **Query expansion** | Single query → N complementary search variants |
+| **Query expansion** | Single query -> N complementary search variants |
 | **Summarization** | Markdown report with inline `[1]` `[2]` citations |
 | **LLM reranking** | Tier-2 reranking on top of deterministic BM25 |
 
@@ -307,19 +348,43 @@ for source in &results.sources {
 
 ---
 
-## Development
+<!-- RECENT_CHANGES_START -->
+<!-- RECENT_CHANGES_END -->
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
+## Alpha Status
 
-```bash
-cargo build                              # build all crates
-cargo test                               # unit tests (mocked, no services needed)
-cargo test -- --ignored                  # integration tests (requires test.toml)
-cargo run -p robot -- harness "query"   # diagnostic harness with stats
-```
+WebGate is in **alpha**. Core functionality is stable and the server is used daily,
+but the API surface may still change before 1.0.
 
----
+**Feedback is very welcome.** If something doesn't work as expected, behaves oddly,
+or you have a use case that isn't covered:
+
+> [Open an issue on GitHub](https://github.com/annibale-x/webgate/issues)
+
+Bug reports, configuration questions, and feature requests all help shape the roadmap.
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
+- Development setup and workflow
+- Code style and conventions
+- Testing requirements
+- Documentation standards
+- Pull request process
 
 ## License
 
-MIT
+MIT License — see [LICENSE](LICENSE) for details.
+
+## Links
+
+- **[GitHub Repository](https://github.com/annibale-x/webgate)** — Source code and issues
+<!-- - **[docs.rs](https://docs.rs/webgate)** — API documentation -->
+<!-- - **[MCP Registry](https://registry.modelcontextprotocol.io/?q=webgate&all=1)** — WebGate on Model Context Protocol Registry -->
+- **[MCP Protocol](https://modelcontextprotocol.io/specification/2025-11-25)** — Model Context Protocol specification
+
+---
+
+**Need help?** Check the [documentation](docs/) or open an [issue](https://github.com/annibale-x/webgate/issues) on GitHub.
+
+<!-- mcp-name: io.github.annibale-x/mcp-webgate -->

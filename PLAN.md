@@ -55,7 +55,10 @@ webgate/                            # repo root
 │   │       │   ├── brave.rs
 │   │       │   ├── tavily.rs
 │   │       │   ├── exa.rs
-│   │       │   └── serpapi.rs
+│   │       │   ├── serpapi.rs
+│   │       │   ├── google.rs       # Google Custom Search API
+│   │       │   ├── bing.rs         # Bing Web Search API
+│   │       │   └── http.rs         # generic configurable REST backend
 │   │       ├── llm/
 │   │       │   ├── mod.rs
 │   │       │   ├── client.rs       # OpenAI-compatible async client (reqwest)
@@ -75,7 +78,8 @@ webgate/                            # repo root
 │   └── robot/                      # internal dev tool (publish = false)
 │       ├── Cargo.toml
 │       └── src/
-│           └── main.rs             # bump, promote, unpromote, publish
+│           ├── main.rs             # bump, test, promote, unpromote, publish, harness
+│           └── harness.rs          # diagnostic runner (real services, verbose output)
 │
 ├── tests/                          # integration tests
 │   ├── test_cleaner.rs
@@ -590,6 +594,7 @@ pub struct QueryResult {
 - [ ] GitHub Actions `release.yml` — cross-compile 5 targets (pure Rust, no C deps)
 - [ ] Publish `webgate` + `webgate-mcp` on crates.io
 - [ ] README with installation instructions + standalone cleaner usage examples
+- [ ] docs.rs: annotate feature-gated API with `#[cfg_attr(docsrs, doc(cfg(feature = "...")))]` on `llm` and `backends` modules
 - [ ] **Deliverable:** Prebuilt binaries on GitHub Releases, `cargo install webgate-mcp` works
 
 ### M6 — Zed extension (optional, 2 days)
@@ -671,6 +676,19 @@ Publishes both crates to crates.io. Use after `promote`, starting from M5.
 1. `cargo publish -p webgate`
 2. Wait for crates.io index propagation (~15 s).
 3. `cargo publish -p webgate-mcp`
+
+#### `robot harness <query> [options]`
+
+Diagnostic runner for the full query pipeline against real services using `test.toml` config.
+
+```bash
+cargo run -p robot -- harness "rust async patterns" --backend searxng -n 5 --verbose
+```
+
+Options:
+- `--backend <NAME>` — override backend from config
+- `-n <N>` — number of results per query
+- `--verbose` — show content previews, BM25 scores, budget stats
 
 ### Versioning
 

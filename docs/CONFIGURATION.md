@@ -33,7 +33,7 @@ A minimal `webgate.toml` that uses a local SearXNG and an Ollama LLM:
 default = "searxng"
 
 [backends.searxng]
-url = "http://localhost:4000"
+url = "http://localhost:8080"
 
 [llm]
 enabled  = true
@@ -106,21 +106,21 @@ You only need to configure the backend(s) you actually want to use.
 
 #### SearXNG (self-hosted, free, no API key)
 
-| TOML key | Env var | Default | What it does |
-|----------|---------|---------|--------------|
-| `backends.searxng.url` | `WEBGATE_SEARXNG_URL` | `"http://localhost:8080"` | URL of your SearXNG instance. |
+| TOML key | Env var | CLI arg | Default | What it does |
+|----------|---------|---------|---------|--------------|
+| `backends.searxng.url` | `WEBGATE_SEARXNG_URL` | `--searxng-url` | `"http://localhost:8080"` | URL of your SearXNG instance. |
 
 ```toml
 [backends.searxng]
-url = "http://localhost:4000"
+url = "http://localhost:8080"
 ```
 
 #### Brave Search
 
-| TOML key | Env var | Default | What it does |
-|----------|---------|---------|--------------|
-| `backends.brave.api_key` | `WEBGATE_BRAVE_API_KEY` | `""` | Your Brave Search API key. Get one free at [brave.com/search/api](https://brave.com/search/api/). |
-| `backends.brave.safesearch` | — | `1` | Safe search level: `0` = off, `1` = moderate, `2` = strict. |
+| TOML key | Env var | CLI arg | Default | What it does |
+|----------|---------|---------|---------|--------------|
+| `backends.brave.api_key` | `WEBGATE_BRAVE_API_KEY` | `--brave-api-key` | `""` | Your Brave Search API key. Get one free at [brave.com/search/api](https://brave.com/search/api/). |
+| `backends.brave.safesearch` | — | — | `1` | Safe search level: `0` = off, `1` = moderate, `2` = strict. |
 
 ```toml
 [backends.brave]
@@ -129,10 +129,10 @@ api_key = "BSA-xxxxxxxxxxxx"
 
 #### Tavily
 
-| TOML key | Env var | Default | What it does |
-|----------|---------|---------|--------------|
-| `backends.tavily.api_key` | `WEBGATE_TAVILY_API_KEY` | `""` | Your Tavily API key. Get one at [tavily.com](https://tavily.com/). |
-| `backends.tavily.search_depth` | — | `"basic"` | Search depth: `"basic"` (faster) or `"advanced"` (more thorough). |
+| TOML key | Env var | CLI arg | Default | What it does |
+|----------|---------|---------|---------|--------------|
+| `backends.tavily.api_key` | `WEBGATE_TAVILY_API_KEY` | `--tavily-api-key` | `""` | Your Tavily API key. Get one at [tavily.com](https://tavily.com/). |
+| `backends.tavily.search_depth` | — | — | `"basic"` | Search depth: `"basic"` (faster) or `"advanced"` (more thorough). |
 
 ```toml
 [backends.tavily]
@@ -142,11 +142,11 @@ search_depth = "basic"
 
 #### Exa
 
-| TOML key | Env var | Default | What it does |
-|----------|---------|---------|--------------|
-| `backends.exa.api_key` | `WEBGATE_EXA_API_KEY` | `""` | Your Exa API key. Get one at [exa.ai](https://exa.ai/). |
-| `backends.exa.num_sentences` | — | `3` | Number of snippet sentences returned per result. |
-| `backends.exa.search_type` | — | `"neural"` | Search type: `"neural"`, `"keyword"`, or `"auto"`. |
+| TOML key | Env var | CLI arg | Default | What it does |
+|----------|---------|---------|---------|--------------|
+| `backends.exa.api_key` | `WEBGATE_EXA_API_KEY` | `--exa-api-key` | `""` | Your Exa API key. Get one at [exa.ai](https://exa.ai/). |
+| `backends.exa.num_sentences` | — | — | `3` | Number of snippet sentences returned per result. |
+| `backends.exa.search_type` | — | — | `"neural"` | Search type: `"neural"`, `"keyword"`, or `"auto"`. |
 
 ```toml
 [backends.exa]
@@ -155,13 +155,13 @@ api_key = "exa-xxxxxxxxxxxx"
 
 #### SerpAPI
 
-| TOML key | Env var | Default | What it does |
-|----------|---------|---------|--------------|
-| `backends.serpapi.api_key` | `WEBGATE_SERPAPI_API_KEY` | `""` | Your SerpAPI key. Get one at [serpapi.com](https://serpapi.com/). |
-| `backends.serpapi.engine` | `WEBGATE_SERPAPI_ENGINE` | `"google"` | Which engine SerpAPI should use: `"google"`, `"bing"`, `"duckduckgo"`, `"yandex"`, etc. |
-| `backends.serpapi.gl` | `WEBGATE_SERPAPI_GL` | `"us"` | Country code for results (ISO 3166-1). |
-| `backends.serpapi.hl` | `WEBGATE_SERPAPI_HL` | `"en"` | Language code for results. |
-| `backends.serpapi.safe` | — | `"off"` | Safe search: `"off"`, `"active"`. |
+| TOML key | Env var | CLI arg | Default | What it does |
+|----------|---------|---------|---------|--------------|
+| `backends.serpapi.api_key` | `WEBGATE_SERPAPI_API_KEY` | `--serpapi-api-key` | `""` | Your SerpAPI key. Get one at [serpapi.com](https://serpapi.com/). |
+| `backends.serpapi.engine` | `WEBGATE_SERPAPI_ENGINE` | — | `"google"` | Which engine SerpAPI should use: `"google"`, `"bing"`, `"duckduckgo"`, `"yandex"`, etc. |
+| `backends.serpapi.gl` | `WEBGATE_SERPAPI_GL` | — | `"us"` | Country code for results (ISO 3166-1). |
+| `backends.serpapi.hl` | `WEBGATE_SERPAPI_HL` | — | `"en"` | Language code for results. |
+| `backends.serpapi.safe` | — | — | `"off"` | Safe search: `"off"`, `"active"`. |
 
 ```toml
 [backends.serpapi]
@@ -289,6 +289,11 @@ mcp-webgate [OPTIONS]
 |----------|--------------|
 | `--config <PATH>` | Load config from a specific TOML file instead of auto-discovering `webgate.toml`. |
 | `--default-backend <NAME>` | Override the default search backend (e.g. `brave`, `searxng`). |
+| `--searxng-url <URL>` | SearXNG instance URL. |
+| `--brave-api-key <KEY>` | Brave Search API key. |
+| `--tavily-api-key <KEY>` | Tavily API key. |
+| `--exa-api-key <KEY>` | Exa API key. |
+| `--serpapi-api-key <KEY>` | SerpAPI key. |
 | `--google-api-key <KEY>` | Google Custom Search API key. |
 | `--google-cx <ID>` | Google Custom Search Engine ID. |
 | `--bing-api-key <KEY>` | Bing Web Search API key. |
