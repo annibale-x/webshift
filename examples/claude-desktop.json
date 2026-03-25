@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "webgate": {
+      "command": "mcp-webgate",
+      "args": ["--default-backend", "searxng"]
+    }
+  }
+}

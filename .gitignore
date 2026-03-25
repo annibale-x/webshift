@@ -24,3 +24,7 @@ Desktop.ini
 # Environment
 .env
 .env.*
+
+.agent
+.dev
+test.toml

@@ -1,0 +1,4 @@
+# No system package dependencies — pure Rust build.
+
+[alias]
+robot = "run -p robot --"
