@@ -575,6 +575,8 @@ pub struct QueryResult {
 - [x] LLM reranking in `reranker.rs` (behind `llm` feature flag)
 - [x] Adaptive budget redistribution
 - [x] Tests: LLM features with mock responses
+- [x] Integration test infrastructure: `test.toml` config + `#[ignore]` live tests
+- [x] `robot harness` — diagnostic runner with BM25 scores, budget stats, LLM summary
 - [x] **Deliverable:** Full feature parity with Python Phase 4
 
 ### M5 — CI, release, publish (3 days)
@@ -606,6 +608,10 @@ pub struct QueryResult {
 | Integration: backends | `wiremock` | Mock each backend's API, verify request format + response parsing |
 | Integration: LLM | `wiremock` | Mock OpenAI endpoint, test expander/summarizer/reranker |
 | Integration: pipeline | `wiremock` | Full query cycle with mocked backend + mocked pages |
+| Live: backends | `#[ignore]` + `test.toml` | Real service tests per backend (SearXNG, Brave, etc.) |
+| Live: LLM | `#[ignore]` + `test.toml` | Real LLM expansion, summarization, full pipeline |
+| Live: fetch | `#[ignore]` | Single page fetch against real URL |
+| Harness | `robot harness` | Diagnostic runner with BM25 scores, budget allocation, timing |
 | E2E: MCP | subprocess | Spawn `mcp-webgate`, send JSON-RPC via stdin, verify stdout |
 
 ---

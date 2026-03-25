@@ -1,5 +1,19 @@
 # Changelog
 
+* **2026-03-25: v0.1.7** - Integration tests, diagnostic harness, docs & examples
+  * feat(test): `test.toml` config for live integration tests (`#[ignore]`, per-backend/LLM `enabled` flags)
+  * feat(test): `TestConfig` struct with `to_webgate_config()` conversion
+  * feat(test): integration tests — 5 backend live tests, 3 LLM pipeline tests, 1 fetch test
+  * feat(robot): `harness` subcommand — full pipeline runner with BM25 scores, budget stats, timing
+  * docs(readme): comprehensive README with installation, configuration, backends, LLM, integrations
+  * docs(contributing): integration tests and diagnostic harness documentation
+  * docs(plan): check off integration test infrastructure in M4
+  * chore(examples): `webgate.toml`, `webgate-ollama.toml`, `webgate-minimal.toml`, `webgate-brave.toml`
+  * chore(examples): `claude-desktop.json`, `claude-desktop-ollama.json` MCP client configs
+  * chore(examples): `test.toml.example` template for contributor integration testing
+
+---
+
 * **2026-03-25: v0.1.6** - M4 complete — LLM features
   * feat(llm): `LlmClient` — async OpenAI-compatible chat completions client (reqwest, no SDK dependency)
   * feat(llm): `expand_queries()` — single query → N complementary queries via LLM, with JSON fence stripping and fallback

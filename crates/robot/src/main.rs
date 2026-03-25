@@ -10,6 +10,8 @@
 //! Run from the workspace root:
 //!   cargo run -p robot -- <command> [args]
 
+mod harness;
+
 use clap::{Parser, Subcommand};
 use std::process::{Command, Stdio};
 
@@ -39,6 +41,20 @@ enum Cmd {
     Unpromote,
     /// Publish webgate then webgate-mcp to crates.io (use after promote).
     Publish,
+    /// Run the full query pipeline against real services using test.toml config.
+    Harness {
+        /// The search query to run.
+        query: String,
+        /// Override backend (default: from test.toml).
+        #[arg(short, long)]
+        backend: Option<String>,
+        /// Number of results per query.
+        #[arg(short = 'n', long)]
+        num_results: Option<usize>,
+        /// Enable verbose output (content previews).
+        #[arg(short, long, default_value_t = true)]
+        verbose: bool,
+    },
 }
 
 // ---------------------------------------------------------------------------
@@ -60,6 +76,20 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         Cmd::Promote => cmd_promote(),
         Cmd::Unpromote => cmd_unpromote(),
         Cmd::Publish => cmd_publish(),
+        Cmd::Harness {
+            query,
+            backend,
+            num_results,
+            verbose,
+        } => {
+            let rt = tokio::runtime::Runtime::new()?;
+            rt.block_on(harness::run_harness(
+                &query,
+                backend.as_deref(),
+                num_results,
+                verbose,
+            ))
+        }
     }
 }
 

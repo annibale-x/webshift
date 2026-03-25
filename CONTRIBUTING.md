@@ -165,3 +165,52 @@ Depend only on the cleaner + fetcher:
 ```toml
 webgate = { version = "x.y.z", default-features = false }
 ```
+
+---
+
+## Testing
+
+### Unit tests (mocked)
+
+All unit and pipeline tests use `wiremock` mock servers — no external services needed:
+
+```bash
+cargo test --workspace                          # full suite
+cargo test -p webgate --features llm            # include LLM tests
+```
+
+### Integration tests (real services)
+
+Integration tests hit real backends and LLM services configured in `test.toml`.
+They are marked `#[ignore]` and skipped by default.
+
+**Setup:**
+
+```bash
+cp test.toml.example test.toml   # copy template
+# edit test.toml — enable backends you have, add API keys
+```
+
+**Run:**
+
+```bash
+cargo test -p webgate --features llm -- --ignored          # all integration tests
+cargo test -p webgate -- --ignored searxng_live             # single backend
+cargo test -p webgate --features llm -- --ignored llm_      # LLM tests only
+```
+
+Each test checks its backend/LLM `enabled` flag and prints `SKIP` if disabled.
+
+### Diagnostic harness
+
+The `robot harness` subcommand runs the full pipeline against real services
+with verbose diagnostic output — useful for tuning BM25, budget allocation,
+and reranking parameters.
+
+```bash
+cargo run -p robot -- harness "rust async programming"
+cargo run -p robot -- harness "quantum computing" --backend brave -n 10
+```
+
+Output includes: pipeline stats, per-source details, BM25 score distribution,
+adaptive budget allocation, snippet pool, and LLM summary.
