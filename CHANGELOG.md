@@ -11,6 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.11] - 2026-03-25
+
+### Added
+
+- CLI arguments for all search backends: `--searxng-url`, `--brave-api-key`, `--tavily-api-key`, `--exa-api-key`, `--serpapi-api-key` (Google and Bing already had CLI args) — enables per-instance backend configuration when running multiple IDE/agent instances
+- `robot bump` now automatically updates the version badge in README.md
+- `robot bump` stages README.md alongside Cargo.toml and CHANGELOG.md
+- `[package.metadata.docs.rs]` in webgate Cargo.toml — builds docs.rs documentation with all features enabled
+
+### Changed
+
+- README.md rewritten with proper introduction: "What is WebGate" section explaining the three use cases (HTML denoiser, web content client, MCP server), "When to use / When NOT to use" guidance
+- Crates.io badge now points to `webgate` crate (was `webgate-mcp`)
+- Status section updated from "Beta" to "Alpha" with correct issue tracker link
+- `docs/CONFIGURATION.md` backend tables now include CLI arg column for all backends
+- PLAN.md workspace layout updated: added `google.rs`, `bing.rs`, `http.rs` backends and `harness.rs`; added `robot harness` command documentation; added docs.rs annotation task to M5
+
+---
+
 ## [0.1.10] - 2026-03-25
 
 ### Added

@@ -45,6 +45,10 @@ tracing = "0.1"
 # Async trait (for SearchBackend dyn dispatch)
 async-trait = "0.1"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "test-util"] }
 wiremock = "0.6"

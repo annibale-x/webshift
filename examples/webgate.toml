@@ -29,7 +29,7 @@
 default = "searxng"                # searxng | brave | tavily | exa | serpapi
 
 [backends.searxng]
-url = "http://localhost:4000"      # Self-hosted, no API key needed
+url = "http://localhost:8080"      # Self-hosted, no API key needed
 
 [backends.brave]
 api_key = ""                       # Get free key at brave.com/search/api

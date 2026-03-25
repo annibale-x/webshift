@@ -37,6 +37,31 @@ struct Cli {
     #[arg(long)]
     default_backend: Option<String>,
 
+    // --- SearXNG ---
+    /// SearXNG instance URL (WEBGATE_SEARXNG_URL).
+    #[arg(long)]
+    searxng_url: Option<String>,
+
+    // --- Brave Search ---
+    /// Brave Search API key (WEBGATE_BRAVE_API_KEY).
+    #[arg(long)]
+    brave_api_key: Option<String>,
+
+    // --- Tavily ---
+    /// Tavily API key (WEBGATE_TAVILY_API_KEY).
+    #[arg(long)]
+    tavily_api_key: Option<String>,
+
+    // --- Exa ---
+    /// Exa API key (WEBGATE_EXA_API_KEY).
+    #[arg(long)]
+    exa_api_key: Option<String>,
+
+    // --- SerpAPI ---
+    /// SerpAPI key (WEBGATE_SERPAPI_API_KEY).
+    #[arg(long)]
+    serpapi_api_key: Option<String>,
+
     // --- Google Custom Search ---
     /// Google Custom Search API key (WEBGATE_GOOGLE_API_KEY).
     #[arg(long)]
@@ -397,14 +422,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config.server.log_file = log_file.clone();
     }
 
-    // Apply Google CLI overrides
+    // Apply backend CLI overrides
+    if let Some(ref v) = cli.searxng_url {
+        config.backends.searxng.url = v.clone();
+    }
+    if let Some(ref v) = cli.brave_api_key {
+        config.backends.brave.api_key = v.clone();
+    }
+    if let Some(ref v) = cli.tavily_api_key {
+        config.backends.tavily.api_key = v.clone();
+    }
+    if let Some(ref v) = cli.exa_api_key {
+        config.backends.exa.api_key = v.clone();
+    }
+    if let Some(ref v) = cli.serpapi_api_key {
+        config.backends.serpapi.api_key = v.clone();
+    }
     if let Some(ref v) = cli.google_api_key {
         config.backends.google.api_key = v.clone();
     }
     if let Some(ref v) = cli.google_cx {
         config.backends.google.cx = v.clone();
     }
-    // Apply Bing CLI overrides
     if let Some(ref v) = cli.bing_api_key {
         config.backends.bing.api_key = v.clone();
     }
@@ -640,6 +679,24 @@ mod tests {
             "/tmp/webgate.toml",
             "--default-backend",
             "brave",
+            "--searxng-url",
+            "http://my-searxng:9090",
+            "--brave-api-key",
+            "BSA-xxx",
+            "--tavily-api-key",
+            "tvly-xxx",
+            "--exa-api-key",
+            "exa-xxx",
+            "--serpapi-api-key",
+            "serp-xxx",
+            "--google-api-key",
+            "AIza-xxx",
+            "--google-cx",
+            "cx-xxx",
+            "--bing-api-key",
+            "bing-xxx",
+            "--bing-market",
+            "it-IT",
             "--debug",
             "--trace",
             "--log-file",
@@ -647,6 +704,15 @@ mod tests {
         ]);
         assert_eq!(cli.config.unwrap().to_str().unwrap(), "/tmp/webgate.toml");
         assert_eq!(cli.default_backend.unwrap(), "brave");
+        assert_eq!(cli.searxng_url.unwrap(), "http://my-searxng:9090");
+        assert_eq!(cli.brave_api_key.unwrap(), "BSA-xxx");
+        assert_eq!(cli.tavily_api_key.unwrap(), "tvly-xxx");
+        assert_eq!(cli.exa_api_key.unwrap(), "exa-xxx");
+        assert_eq!(cli.serpapi_api_key.unwrap(), "serp-xxx");
+        assert_eq!(cli.google_api_key.unwrap(), "AIza-xxx");
+        assert_eq!(cli.google_cx.unwrap(), "cx-xxx");
+        assert_eq!(cli.bing_api_key.unwrap(), "bing-xxx");
+        assert_eq!(cli.bing_market.unwrap(), "it-IT");
         assert!(cli.debug);
         assert!(cli.trace);
         assert_eq!(cli.log_file.unwrap(), "/tmp/mcp.log");
