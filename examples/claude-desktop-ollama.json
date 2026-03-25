@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "webgate": {
+      "command": "mcp-webgate",
+      "args": [
+        "--default-backend", "searxng",
+        "--llm-enabled",
+        "--llm-base-url", "http://localhost:11434/v1",
+        "--llm-model", "gemma3:27b"
+      ]
+    }
+  }
+}
