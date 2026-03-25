@@ -545,6 +545,7 @@ pub struct QueryResult {
 - [x] `webgate_onboarding` tool (static JSON)
 - [x] CLI argument parsing with clap
 - [x] Stdio transport working with Claude Code
+- [x] Tests: server construction, onboarding JSON, CLI parsing, param deserialization (10 new tests)
 - [x] **Deliverable:** `cargo install webgate-mcp` provides working `mcp-webgate` binary with fetch
 
 ### M3 — Search backends + query pipeline (1 week)

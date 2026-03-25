@@ -1,5 +1,12 @@
 # Changelog
 
+* **2026-03-25: v0.1.4** - M2 tests + robot auto-commit
+  * test(mcp): server construction, onboarding JSON, CLI parsing, param deserialization (10 new tests)
+  * feat(robot): `bump` now auto-commits all tracked changes (not just Cargo/CHANGELOG)
+  * docs(plan): add M2 test task
+
+---
+
 * **2026-03-25: v0.1.3** - M2 complete — MCP server with fetch tool
   * feat(mcp): `webgate_fetch` tool via `rmcp` 1.x with stdio transport
   * feat(mcp): `webgate_onboarding` tool — operational guide JSON (matches Python)

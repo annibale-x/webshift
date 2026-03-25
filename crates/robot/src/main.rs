@@ -149,8 +149,9 @@ fn cmd_bump(explicit: Option<String>) -> Result<(), Box<dyn std::error::Error>> 
     println!("bump: {} → {}", current, new_version);
     write_workspace_version(&new_version)?;
 
-    // Commit CHANGELOG.md + Cargo.toml + Cargo.lock
-    run_cmd("git", &["add", "Cargo.toml", "Cargo.lock", "CHANGELOG.md"])?;
+    // Stage all tracked changes + CHANGELOG + Cargo files
+    run_cmd("git", &["add", "-u"])?;
+    run_cmd("git", &["add", "CHANGELOG.md", "Cargo.toml", "Cargo.lock"])?;
     run_cmd(
         "git",
         &[

@@ -303,3 +303,150 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rmcp::handler::server::ServerHandler;
+
+    /// Extract text from the first Content item in a CallToolResult.
+    fn extract_text(result: &CallToolResult) -> &str {
+        result.content[0]
+            .as_text()
+            .expect("expected text content")
+            .text
+            .as_str()
+    }
+
+    #[test]
+    fn server_construction() {
+        let server = WebgateServer::new(Config::default());
+        assert!(server.config.server.max_result_length > 0);
+    }
+
+    #[test]
+    fn server_info_has_instructions() {
+        let server = WebgateServer::new(Config::default());
+        let info = server.get_info();
+        let instructions = info.instructions.expect("instructions must be set");
+        assert!(instructions.contains("webgate"));
+        assert!(instructions.contains("NEVER"));
+    }
+
+    #[tokio::test]
+    async fn onboarding_returns_valid_json() {
+        let server = WebgateServer::new(Config::default());
+        let result = server.onboarding().await.expect("onboarding must succeed");
+        let text = extract_text(&result);
+
+        let guide: serde_json::Value =
+            serde_json::from_str(text).expect("onboarding must return valid JSON");
+
+        assert!(guide.get("MANDATORY").is_some(), "missing MANDATORY");
+        assert!(guide.get("tools").is_some(), "missing tools");
+        assert!(guide.get("rules").is_some(), "missing rules");
+        assert!(guide.get("protections").is_some(), "missing protections");
+        assert!(guide.get("why").is_some(), "missing why");
+
+        let tools = guide.get("tools").unwrap();
+        assert!(tools.get("webgate_query").is_some());
+        assert!(tools.get("webgate_fetch").is_some());
+    }
+
+    #[tokio::test]
+    async fn onboarding_reflects_config_values() {
+        let mut config = Config::default();
+        config.server.max_result_length = 12345;
+        config.server.max_query_budget = 99999;
+
+        let server = WebgateServer::new(config);
+        let result = server.onboarding().await.unwrap();
+        let text = extract_text(&result);
+
+        assert!(text.contains("12345"), "should reflect max_result_length");
+        assert!(text.contains("99999"), "should reflect max_query_budget");
+    }
+
+    #[tokio::test]
+    async fn onboarding_llm_disabled_by_default() {
+        let server = WebgateServer::new(Config::default());
+        let result = server.onboarding().await.unwrap();
+        let text = extract_text(&result);
+
+        let guide: serde_json::Value = serde_json::from_str(text).unwrap();
+        let llm = guide.get("llm_features").unwrap();
+        assert_eq!(llm.get("status").unwrap(), "disabled");
+    }
+
+    #[tokio::test]
+    async fn onboarding_llm_enabled() {
+        let mut config = Config::default();
+        config.llm.enabled = true;
+        config.llm.model = "test-model".to_string();
+        config.llm.expansion_enabled = true;
+        config.llm.summarization_enabled = false;
+        config.llm.llm_rerank_enabled = true;
+
+        let server = WebgateServer::new(config);
+        let result = server.onboarding().await.unwrap();
+        let text = extract_text(&result);
+
+        let guide: serde_json::Value = serde_json::from_str(text).unwrap();
+        let llm = guide.get("llm_features").unwrap();
+        assert_eq!(llm.get("status").unwrap(), "enabled");
+        assert_eq!(llm.get("model").unwrap(), "test-model");
+        assert_eq!(llm.get("expansion").unwrap(), "active");
+        assert_eq!(llm.get("summarization").unwrap(), "disabled");
+        assert!(llm.get("reranking").unwrap().as_str().unwrap().contains("llm"));
+    }
+
+    #[test]
+    fn cli_parse_defaults() {
+        let cli = Cli::parse_from(["mcp-webgate"]);
+        assert!(cli.config.is_none());
+        assert!(cli.default_backend.is_none());
+        assert!(!cli.debug);
+        assert!(!cli.trace);
+        assert!(cli.log_file.is_none());
+    }
+
+    #[test]
+    fn cli_parse_all_args() {
+        let cli = Cli::parse_from([
+            "mcp-webgate",
+            "--config",
+            "/tmp/webgate.toml",
+            "--default-backend",
+            "brave",
+            "--debug",
+            "--trace",
+            "--log-file",
+            "/tmp/mcp.log",
+        ]);
+        assert_eq!(cli.config.unwrap().to_str().unwrap(), "/tmp/webgate.toml");
+        assert_eq!(cli.default_backend.unwrap(), "brave");
+        assert!(cli.debug);
+        assert!(cli.trace);
+        assert_eq!(cli.log_file.unwrap(), "/tmp/mcp.log");
+    }
+
+    #[test]
+    fn fetch_params_deserialize() {
+        let json = r#"{"url": "https://example.com"}"#;
+        let params: FetchParams = serde_json::from_str(json).unwrap();
+        assert_eq!(params.url, "https://example.com");
+        assert!(params.max_chars.is_none());
+    }
+
+    #[test]
+    fn fetch_params_with_max_chars() {
+        let json = r#"{"url": "https://example.com", "max_chars": 16000}"#;
+        let params: FetchParams = serde_json::from_str(json).unwrap();
+        assert_eq!(params.url, "https://example.com");
+        assert_eq!(params.max_chars.unwrap(), 16000);
+    }
+}
