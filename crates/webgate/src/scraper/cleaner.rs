@@ -372,4 +372,90 @@ mod tests {
         let (text, _, _) = process_page("", "fallback snippet", 8000);
         assert!(text.contains("fallback snippet"));
     }
+
+    // -- Ported from Python test_cleaner.py --
+
+    #[test]
+    fn strips_style_element() {
+        let html = "<html><head><style>body{}</style></head><body><p>Hello</p></body></html>";
+        let result = clean_html(html);
+        assert!(result.contains("Hello"));
+        assert!(!result.contains("body{}"));
+    }
+
+    #[test]
+    fn malformed_html_still_extracts_text() {
+        let result = clean_html("<p>Unclosed paragraph");
+        assert!(result.contains("Unclosed paragraph"));
+    }
+
+    #[test]
+    fn clean_text_collapses_newlines() {
+        let text = "Line 1\n\n\n\n\nLine 2";
+        let result = clean_text(text);
+        assert!(!result.contains("\n\n\n"));
+    }
+
+    #[test]
+    fn clean_text_empty_input() {
+        assert_eq!(clean_text(""), "");
+    }
+
+    #[test]
+    fn clean_text_applies_typography() {
+        let text = "React\u{2019}s new features\u{2014}what\u{2019}s new";
+        let result = clean_text(text);
+        assert!(!result.contains('\u{2019}'));
+        assert!(!result.contains('\u{2014}'));
+        assert!(result.contains("React's"));
+    }
+
+    #[test]
+    fn extract_title_missing_returns_empty() {
+        let html = "<html><body>No title here</body></html>";
+        assert_eq!(extract_title(html), "");
+    }
+
+    #[test]
+    fn process_page_truncation_single_long_line() {
+        let long = "a".repeat(10_000);
+        let html = format!("<html><body><p>{long}</p></body></html>");
+        let (text, _, truncated) = process_page(&html, "", 100);
+        assert_eq!(text.len(), 100);
+        assert!(truncated);
+    }
+
+    #[test]
+    fn apply_window_cuts_on_line_boundary() {
+        let text = "First line\nSecond line\nThird line";
+        // "First line" = 10 + "\n" + "Second line" = 11 → total 22
+        let (result, truncated) = apply_window(text, 22);
+        assert!(result.contains("First line"));
+        assert!(result.contains("Second line"));
+        assert!(!result.contains("Third line"));
+        assert!(truncated);
+    }
+
+    #[test]
+    fn apply_window_result_never_exceeds_budget() {
+        let lines: Vec<String> = (0..200).map(|i| format!("Line number {i:04}")).collect();
+        let text = lines.join("\n");
+        let (result, _) = apply_window(&text, 100);
+        assert!(result.len() <= 100);
+    }
+
+    #[test]
+    fn apply_window_first_line_hard_truncated() {
+        let text = "x".repeat(500);
+        let (result, truncated) = apply_window(&text, 100);
+        assert_eq!(result, "x".repeat(100));
+        assert!(truncated);
+    }
+
+    #[test]
+    fn apply_window_empty_text() {
+        let (result, truncated) = apply_window("", 100);
+        assert_eq!(result, "");
+        assert!(!truncated);
+    }
 }

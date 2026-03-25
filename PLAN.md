@@ -536,8 +536,8 @@ pub struct QueryResult {
 - [x] `utils/url.rs` — sanitize, dedup, binary filter, domain filter
 - [x] `lib.rs` — `webgate::clean()` and `webgate::fetch()` public API
 - [x] `robot` — `bump`, `test`, `promote`, `unpromote`, `publish` commands
-- [ ] Tests: cleaner (port from Python test suite), fetcher (mock server)
-- [ ] **Deliverable:** `webgate` crate compiles and passes tests; `robot` operational
+- [x] Tests: cleaner (port from Python test suite), fetcher (mock server)
+- [x] **Deliverable:** `webgate` crate compiles and passes tests; `robot` operational
 
 ### M2 — MCP server with fetch tool (3 days)
 

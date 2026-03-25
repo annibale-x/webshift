@@ -1,5 +1,13 @@
 # Changelog
 
+* **2026-03-25: v0.1.2** - M1 complete — config, tests
+  * feat(config): TOML loading + `WEBGATE_*` env var overrides + tests
+  * test(cleaner): port full Python test suite (12 new tests)
+  * test(fetcher): wiremock retry tests — 429, 503, exhausted retries, 404 no-retry (6 new tests)
+  * docs(plan): check off all M1 tasks
+
+---
+
 * **2026-03-25: v0.1.1** - Initial workspace scaffold
   * feat(workspace): setup `webgate` (lib), `webgate-mcp` (bin), `robot` (dev tool)
   * feat(robot): `bump`, `test`, `promote`, `unpromote`, `publish` commands

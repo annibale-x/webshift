@@ -305,4 +305,93 @@ mod tests {
 
         assert_eq!(html_map.len(), 3);
     }
+
+    // -- Ported from Python test_fetcher.py --
+
+    #[test]
+    fn user_agent_pool_has_40_entries() {
+        assert_eq!(USER_AGENTS.len(), 40);
+    }
+
+    #[test]
+    fn all_user_agents_contain_mozilla() {
+        for ua in USER_AGENTS {
+            assert!(ua.contains("Mozilla"), "UA should contain Mozilla: {ua}");
+        }
+    }
+
+    #[tokio::test]
+    async fn retries_on_429_then_succeeds() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/retry"))
+            .respond_with(ResponseTemplate::new(429))
+            .up_to_n_times(1)
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path("/retry"))
+            .respond_with(ResponseTemplate::new(200).set_body_string("<html>OK</html>"))
+            .mount(&server)
+            .await;
+
+        let url = format!("{}/retry", server.uri());
+        let (html_map, _) = fetch_urls(&[url.clone()], 1024 * 1024, 10).await;
+        assert!(html_map.contains_key(&url));
+        assert!(html_map[&url].contains("OK"));
+    }
+
+    #[tokio::test]
+    async fn retries_on_503_then_succeeds() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/retry503"))
+            .respond_with(ResponseTemplate::new(503))
+            .up_to_n_times(1)
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path("/retry503"))
+            .respond_with(ResponseTemplate::new(200).set_body_string("<html>OK</html>"))
+            .mount(&server)
+            .await;
+
+        let url = format!("{}/retry503", server.uri());
+        let (html_map, _) = fetch_urls(&[url.clone()], 1024 * 1024, 10).await;
+        assert!(html_map.contains_key(&url));
+    }
+
+    #[tokio::test]
+    async fn exhausts_retries_returns_none() {
+        let server = MockServer::start().await;
+        // All attempts return 429 → should exhaust retries (BACKOFF_DELAYS.len() + 1 = 3 attempts)
+        Mock::given(method("GET"))
+            .and(path("/always429"))
+            .respond_with(ResponseTemplate::new(429))
+            .expect(3)
+            .mount(&server)
+            .await;
+
+        let url = format!("{}/always429", server.uri());
+        let (html_map, timing_map) = fetch_urls(&[url.clone()], 1024 * 1024, 30).await;
+        assert!(!html_map.contains_key(&url), "should return None after exhausting retries");
+        assert!(timing_map.contains_key(&url));
+    }
+
+    #[tokio::test]
+    async fn non_retryable_404_does_not_retry() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/notfound"))
+            .respond_with(ResponseTemplate::new(404))
+            .expect(1) // exactly 1 request — no retries
+            .mount(&server)
+            .await;
+
+        let url = format!("{}/notfound", server.uri());
+        let (html_map, _) = fetch_urls(&[url.clone()], 1024 * 1024, 5).await;
+        assert!(!html_map.contains_key(&url));
+    }
 }
