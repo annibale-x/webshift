@@ -28,9 +28,9 @@ git branch -d feat/my-feature
 # No system packages required — pure Rust
 cargo build          # build all crates
 cargo test           # run full test suite
-cargo test -p webgate               # library only
-cargo test -p webgate -- test_name  # single test
-cargo run -p webgate-mcp            # start MCP server
+cargo test -p webshift               # library only
+cargo test -p webshift -- test_name  # single test
+cargo run -p webshift-mcp            # start MCP server
 ```
 
 ---
@@ -107,7 +107,7 @@ What `promote` does:
 cargo run -p robot -- publish
 ```
 
-Publishes `webgate` then `webgate-mcp` to crates.io in order.
+Publishes `webshift` then `webshift-mcp` to crates.io in order.
 Only run after a successful `promote`.
 
 ### Undo a promote
@@ -150,11 +150,11 @@ chore(deps): add scraper 0.20 with html5ever
 
 | Crate | Published | Role |
 |-------|-----------|------|
-| `webgate` | yes | Library: `clean()`, `fetch()`, `query()` |
-| `webgate-mcp` | yes | Binary: MCP server (`mcp-webgate`) |
+| `webshift` | yes | Library: `clean()`, `fetch()`, `query()` |
+| `webshift-mcp` | yes | Binary: MCP server (`mcp-webshift`) |
 | `robot` | no | Dev tool: bump / test / promote / unpromote / publish |
 
-### Feature flags (`webgate`)
+### Feature flags (`webshift`)
 
 | Feature | Default | Enables |
 |---------|---------|---------|
@@ -163,7 +163,7 @@ chore(deps): add scraper 0.20 with html5ever
 
 Depend only on the cleaner + fetcher:
 ```toml
-webgate = { version = "x.y.z", default-features = false }
+webshift = { version = "x.y.z", default-features = false }
 ```
 
 ---
@@ -193,7 +193,7 @@ webgate = { version = "x.y.z", default-features = false }
 | **LLM summarizer** | `llm/summarizer.rs` | 4 | Markdown output, error propagation, empty sources, max_words in prompt |
 | **Pipeline** | `lib.rs` | 17 | Search→fetch→clean→rerank, dedup, binary filter, snippet pool, multi-query round-robin, LLM expansion, summarization, error capture |
 | **Public API** | `lib.rs` | 5 | `clean()` fields/truncation/noise, `fetch()` binary/domain filters + fields, `query()` empty input |
-| **MCP server** | `webgate-mcp` | 17 | CLI parsing (all args), tool params deserialization, onboarding JSON, server info, StringOrList coercion |
+| **MCP server** | `webshift-mcp` | 17 | CLI parsing (all args), tool params deserialization, onboarding JSON, server info, StringOrList coercion |
 | **Robot** | `robot` | 5 | increment_patch (basic, zero, large, invalid format, non-numeric) |
 | | | **~200** | |
 
@@ -203,7 +203,7 @@ All unit and pipeline tests use `wiremock` mock servers — no external services
 
 ```bash
 cargo test --workspace                          # full suite
-cargo test -p webgate --features llm            # include LLM tests
+cargo test -p webshift --features llm            # include LLM tests
 ```
 
 ### Integration tests (real services)
@@ -221,9 +221,9 @@ cp test.toml.example test.toml   # copy template
 **Run:**
 
 ```bash
-cargo test -p webgate --features llm -- --ignored          # all integration tests
-cargo test -p webgate -- --ignored searxng_live             # single backend
-cargo test -p webgate --features llm -- --ignored llm_      # LLM tests only
+cargo test -p webshift --features llm -- --ignored          # all integration tests
+cargo test -p webshift -- --ignored searxng_live             # single backend
+cargo test -p webshift --features llm -- --ignored llm_      # LLM tests only
 ```
 
 Each test checks its backend/LLM `enabled` flag and prints `SKIP` if disabled.

@@ -1717,7 +1717,7 @@ dependencies = [
  "serde",
  "tokio",
  "toml",
- "webgate",
+ "webshift",
 ]
 
 [[package]]
@@ -2639,7 +2639,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "webgate"
+name = "webshift"
 version = "0.1.12"
 dependencies = [
  "async-trait",
@@ -2660,7 +2660,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "webgate-mcp"
+name = "webshift-mcp"
 version = "0.1.12"
 dependencies = [
  "clap",
@@ -2671,7 +2671,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
- "webgate",
+ "webshift",
 ]
 
 [[package]]

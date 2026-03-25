@@ -1,6 +1,6 @@
 # Under the Hood
 
-How webgate turns a raw search query into clean, budget-capped, LLM-ready text.
+How webshift turns a raw search query into clean, budget-capped, LLM-ready text.
 
 ---
 
@@ -224,7 +224,7 @@ to BM25 scores). The `adaptive_budget` setting controls which one is used.
 
 ### `adaptive_budget = "auto"` (default)
 
-webgate decides automatically by computing the **dominance ratio**:
+webshift decides automatically by computing the **dominance ratio**:
 
 ```
 dominance_ratio = (max_score / total_score) × number_of_sources

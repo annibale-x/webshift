@@ -1,7 +1,7 @@
 # Use Cases and Examples
 
 Real-world configurations for common scenarios. Each example is a complete
-`webgate.toml` you can copy and adjust.
+`webshift.toml` you can copy and adjust.
 
 ---
 
@@ -18,7 +18,7 @@ docker run -d -p 4000:8080 searxng/searxng
 ```
 
 ```toml
-# webgate.toml
+# webshift.toml
 [backends]
 default = "searxng"
 
@@ -46,7 +46,7 @@ ollama pull gemma3:27b
 ```
 
 ```toml
-# webgate.toml
+# webshift.toml
 [server]
 max_total_results = 5
 max_query_budget  = 16000
@@ -66,7 +66,7 @@ expansion_enabled     = true     # one question → multiple search queries
 summarization_enabled = true     # get a Markdown report with citations
 ```
 
-**What you get:** the agent asks one question, webgate expands it into
+**What you get:** the agent asks one question, webshift expands it into
 5 related queries, searches all of them, fetches the top pages, cleans
 them, ranks them by relevance, and produces a cited Markdown summary.
 All locally.
@@ -79,7 +79,7 @@ All locally.
 and want the best quality.
 
 ```toml
-# webgate.toml
+# webshift.toml
 [backends]
 default = "brave"
 
@@ -108,7 +108,7 @@ LLM reranking + LLM summary. More API calls, but most accurate results.
 to choose the best backend for each query.
 
 ```toml
-# webgate.toml
+# webshift.toml
 [backends]
 default = "searxng"       # used when no backend is specified
 
@@ -142,7 +142,7 @@ The agent can override the backend per query:
 or you want to minimize token usage to save costs.
 
 ```toml
-# webgate.toml
+# webshift.toml
 [server]
 max_total_results = 3         # only 3 pages
 max_query_budget  = 4000      # tiny budget: ~1000 tokens
@@ -167,7 +167,7 @@ Fits easily in a small context window.
 results for deep research.
 
 ```toml
-# webgate.toml
+# webshift.toml
 [server]
 max_total_results   = 20
 max_query_budget    = 64000     # 64K chars ≈ 16K tokens
@@ -200,28 +200,28 @@ adaptive budget allocation, gap-fill recovery. Maximum depth.
 
 ## 7. Environment variables only (no config file)
 
-**Who is this for?** You're running webgate in a container or CI/CD pipeline
+**Who is this for?** You're running webshift in a container or CI/CD pipeline
 where files are inconvenient.
 
 ```bash
-export WEBGATE_DEFAULT_BACKEND=brave
-export WEBGATE_BRAVE_API_KEY=BSA-xxxxxxxxxxxx
-export WEBGATE_MAX_TOTAL_RESULTS=5
-export WEBGATE_MAX_QUERY_BUDGET=16000
-export WEBGATE_LLM_ENABLED=true
-export WEBGATE_LLM_BASE_URL=https://api.openai.com/v1
-export WEBGATE_LLM_API_KEY=sk-xxxxxxxxxxxx
-export WEBGATE_LLM_MODEL=gpt-4o-mini
+export WEBSHIFT_DEFAULT_BACKEND=brave
+export WEBSHIFT_BRAVE_API_KEY=BSA-xxxxxxxxxxxx
+export WEBSHIFT_MAX_TOTAL_RESULTS=5
+export WEBSHIFT_MAX_QUERY_BUDGET=16000
+export WEBSHIFT_LLM_ENABLED=true
+export WEBSHIFT_LLM_BASE_URL=https://api.openai.com/v1
+export WEBSHIFT_LLM_API_KEY=sk-xxxxxxxxxxxx
+export WEBSHIFT_LLM_MODEL=gpt-4o-mini
 ```
 
-No `webgate.toml` needed. Everything is configured from the environment.
+No `webshift.toml` needed. Everything is configured from the environment.
 
 ---
 
 ## 8. Custom HTTP backend (your own search API)
 
 **Who is this for?** You have an internal search API or a third-party
-service not natively supported by webgate.
+service not natively supported by webshift.
 
 Suppose your API works like this:
 
@@ -231,7 +231,7 @@ GET https://search.internal.corp/api/find?query=rust+async&limit=10
 ```
 
 ```toml
-# webgate.toml
+# webshift.toml
 [backends]
 default = "http"
 
@@ -249,7 +249,7 @@ snippet_field = "desc"
 "X-API-Key" = "internal-secret-123"
 ```
 
-**What you get:** webgate talks to your custom API using the field
+**What you get:** webshift talks to your custom API using the field
 mappings you defined. No code changes needed.
 
 ---
@@ -257,22 +257,22 @@ mappings you defined. No code changes needed.
 ## 9. MCP client configuration (Claude Code)
 
 **Who is this for?** You're using Claude Code (or any MCP-compatible client)
-and want to configure webgate via the MCP server settings.
+and want to configure webshift via the MCP server settings.
 
 In your `claude_desktop_config.json` or equivalent:
 
 ```json
 {
   "mcpServers": {
-    "webgate": {
-      "command": "mcp-webgate",
+    "webshift": {
+      "command": "mcp-webshift",
       "args": [
         "--default-backend", "searxng",
         "--llm-enabled",
         "--llm-model", "gemma3:27b"
       ],
       "env": {
-        "WEBGATE_SEARXNG_URL": "http://localhost:4000"
+        "WEBSHIFT_SEARXNG_URL": "http://localhost:4000"
       }
     }
   }

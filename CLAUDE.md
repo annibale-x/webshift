@@ -18,16 +18,16 @@ and the project context is loaded correctly.
 
 ## Project
 
-Native Rust port of [mcp-webgate](../mcp-webgate/) (Python). Denoised web search
+Native Rust port of [mcp-webshift](../mcp-webshift/) (Python). Denoised web search
 library and MCP server. Two crates in a workspace:
 
-- **`webgate`** — library crate (crates.io). Public API: `clean()`, `fetch()`, `query()`, `Config`.
-- **`webgate-mcp`** — binary crate (crates.io). MCP server over stdio. Installs as `mcp-webgate`.
+- **`webshift`** — library crate (crates.io). Public API: `clean()`, `fetch()`, `query()`, `Config`.
+- **`webshift-mcp`** — binary crate (crates.io). MCP server over stdio. Installs as `mcp-webshift`.
 - **`robot`** — internal dev tool (not published). `bump`, `test`, `promote`, `unpromote`, `publish`.
 
 ## Reference implementation
 
-The Python source lives in `../mcp-webgate/src/mcp_webgate/`. Key files to reference
+The Python source lives in `../mcp-webshift/src/mcp_webshift/`. Key files to reference
 when porting:
 
 - `scraper/cleaner.py` — lxml XPath cleaning + text sterilization
@@ -58,17 +58,17 @@ when porting:
 
 ```bash
 cargo build                              # build all
-cargo run -p webgate-mcp                 # start MCP server
+cargo run -p webshift-mcp                 # start MCP server
 cargo test                               # run full test suite
-cargo test -p webgate                    # test library only
-cargo test -p webgate -- test_name       # run a single test
+cargo test -p webshift                    # test library only
+cargo test -p webshift -- test_name       # run a single test
 ```
 
 ## Architecture
 
 ```
 crates/
-  webgate/                   # library crate (published to crates.io)
+  webshift/                   # library crate (published to crates.io)
     src/
       lib.rs                 # public API: clean(), fetch(), query(), Config
       config.rs              # serde config (toml + env + CLI)
@@ -86,7 +86,7 @@ crates/
         url.rs               # sanitize, dedup, binary filter, domain filter
         reranker.rs          # BM25 deterministic (+ LLM reranking with "llm" feature)
 
-  webgate-mcp/               # binary crate (published to crates.io) → installs as `mcp-webgate`
+  webshift-mcp/               # binary crate (published to crates.io) → installs as `mcp-webshift`
     src/
       main.rs                # MCP tool registration, stdio transport
 
@@ -95,7 +95,7 @@ crates/
       main.rs                # bump, test, promote, unpromote, publish
 ```
 
-### Feature flags (`webgate` crate)
+### Feature flags (`webshift` crate)
 
 | Feature | Default | Enables |
 |---------|---------|---------|
@@ -104,7 +104,7 @@ crates/
 
 Minimal dependency (cleaner + fetcher only):
 ```toml
-webgate = { version = "x.y.z", default-features = false }
+webshift = { version = "x.y.z", default-features = false }
 ```
 
 ## Anti-flooding protections (DO NOT remove)
@@ -121,7 +121,7 @@ These are the core value proposition — must exist in every code path:
 
 ## Configuration
 
-Same resolution order as Python: **CLI args > env vars (`WEBGATE_*`) > `webgate.toml` > defaults**.
+Same resolution order as Python: **CLI args > env vars (`WEBSHIFT_*`) > `webshift.toml` > defaults**.
 Same env var names, same TOML structure — drop-in compatible config files.
 
 ## Versioning & Release

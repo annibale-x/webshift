@@ -1,4 +1,4 @@
-//! `robot harness` — run the full webgate pipeline against real services
+//! `robot harness` — run the full webshift pipeline against real services
 //! with verbose diagnostic output for tuning BM25, budget, reranking, etc.
 //!
 //! Reads `test.toml` from the workspace root (same file used by integration tests).
@@ -7,7 +7,7 @@ use serde::Deserialize;
 use std::path::PathBuf;
 use std::time::Instant;
 
-// ── TestConfig (mirrors crates/webgate/tests/common/mod.rs) ─────────
+// ── TestConfig (mirrors crates/webshift/tests/common/mod.rs) ─────────
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default)]
@@ -24,7 +24,7 @@ pub struct TestServerConfig {
     pub max_query_budget: usize,
     pub search_timeout: u64,
     pub language: String,
-    pub adaptive_budget: webgate::config::AdaptiveBudget,
+    pub adaptive_budget: webshift::config::AdaptiveBudget,
 }
 
 impl Default for TestServerConfig {
@@ -34,7 +34,7 @@ impl Default for TestServerConfig {
             max_query_budget: 16_000,
             search_timeout: 10,
             language: "en".to_string(),
-            adaptive_budget: webgate::config::AdaptiveBudget::Auto,
+            adaptive_budget: webshift::config::AdaptiveBudget::Auto,
         }
     }
 }
@@ -248,8 +248,8 @@ impl TestConfig {
         v
     }
 
-    pub fn to_webgate_config(&self, backend: &str) -> webgate::Config {
-        use webgate::config::*;
+    pub fn to_webshift_config(&self, backend: &str) -> webshift::Config {
+        use webshift::config::*;
 
         Config {
             server: ServerConfig {
@@ -367,7 +367,7 @@ pub async fn run_harness(
         }
     };
 
-    let config = tc.to_webgate_config(&backend_name);
+    let config = tc.to_webshift_config(&backend_name);
 
     let llm_label = if config.llm.enabled {
         format!("ON ({})", config.llm.model)
@@ -376,12 +376,12 @@ pub async fn run_harness(
     };
 
     // ── Brief header while pipeline runs ────────────────────────────
-    eprintln!("webgate harness | query={query} | backend={backend_name} | llm={llm_label}");
+    eprintln!("webshift harness | query={query} | backend={backend_name} | llm={llm_label}");
     eprintln!("running pipeline...");
 
     // ── Run pipeline ────────────────────────────────────────────────
     let start = Instant::now();
-    let result = webgate::query_with_options(
+    let result = webshift::query_with_options(
         &[query],
         &config,
         num_results,
@@ -392,7 +392,7 @@ pub async fn run_harness(
     let elapsed = start.elapsed();
 
     // ── Compute BM25 scores for report ──────────────────────────────
-    let (scores, _) = webgate::utils::reranker::rerank_with_scores(
+    let (scores, _) = webshift::utils::reranker::rerank_with_scores(
         &result.queries,
         &result.sources,
     );
@@ -404,7 +404,7 @@ pub async fn run_harness(
 
     // ── Resolve adaptive budget display ─────────────────────────────
     let adaptive_display = {
-        use webgate::config::AdaptiveBudget;
+        use webshift::config::AdaptiveBudget;
         match &config.server.adaptive_budget {
             AdaptiveBudget::On => "on".to_string(),
             AdaptiveBudget::Off => "off".to_string(),
@@ -469,7 +469,7 @@ pub async fn run_harness(
     //  CONSOLIDATED REPORT  (at the bottom for easy reading)
     // ====================================================================
     println!();
-    println!("{}", box_header("WEBGATE HARNESS REPORT"));
+    println!("{}", box_header("WEBSHIFT HARNESS REPORT"));
     println!();
 
     // ── Config ──────────────────────────────────────────────────────
@@ -537,7 +537,7 @@ pub async fn run_harness(
     );
     println!("{}", "─".repeat(46));
     for (s, &score) in result.sources.iter().zip(scores.iter()) {
-        let budget_alloc = if total_score > 0.0 && config.server.adaptive_budget != webgate::config::AdaptiveBudget::Off {
+        let budget_alloc = if total_score > 0.0 && config.server.adaptive_budget != webshift::config::AdaptiveBudget::Off {
             (score / total_score * total_budget as f64).round() as usize
         } else {
             result.stats.per_page_limit

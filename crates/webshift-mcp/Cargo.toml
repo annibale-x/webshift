@@ -1,0 +1,23 @@
+[package]
+name = "webshift-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Denoised web search MCP server — native binary, zero runtime dependencies."
+
+[[bin]]
+name = "mcp-webshift"
+path = "src/main.rs"
+
+[dependencies]
+webshift = { version = "0.2", path = "../webshift", features = ["llm"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std"] }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+schemars = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+rmcp = { version = "1", features = ["server", "transport-io", "macros"] }

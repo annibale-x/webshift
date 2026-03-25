@@ -1,0 +1,54 @@
+[package]
+name = "webshift"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Denoised web search library — fetch, clean, and rerank web content for AI agents."
+
+[features]
+default = ["backends"]
+backends = []
+llm = []
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+
+# HTTP client (streaming support critical for size cap)
+reqwest = { version = "0.12", features = ["stream", "gzip", "brotli", "json"] }
+futures = "0.3"
+
+# HTML parsing — pure Rust, no system deps
+scraper = "0.20"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# Text processing
+regex = "1"
+rand = "0.8"
+url = "2"
+
+# Directories (home dir for config file search)
+dirs-next = "2"
+
+# Error handling
+thiserror = "2"
+
+# Logging
+tracing = "0.1"
+
+# Async trait (for SearchBackend dyn dispatch)
+async-trait = "0.1"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "test-util"] }
+wiremock = "0.6"

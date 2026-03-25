@@ -1,4 +1,4 @@
-//! robot — internal dev tool for the webgate workspace.
+//! robot — internal dev tool for the webshift workspace.
 //!
 //! Commands:
 //!   bump [X.Y.Z]  — update workspace version (auto-increment patch if omitted)
@@ -20,7 +20,7 @@ use std::process::{Command, Stdio};
 // ---------------------------------------------------------------------------
 
 #[derive(Parser)]
-#[command(name = "robot", about = "webgate workspace dev tool")]
+#[command(name = "robot", about = "webshift workspace dev tool")]
 struct Cli {
     #[command(subcommand)]
     command: Cmd,
@@ -39,7 +39,7 @@ enum Cmd {
     Promote,
     /// Undo the last promote: delete tag locally and remotely, reset main.
     Unpromote,
-    /// Publish webgate then webgate-mcp to crates.io (use after promote).
+    /// Publish webshift then webshift-mcp to crates.io (use after promote).
     Publish,
     /// Run the full query pipeline against real services using test.toml config.
     Harness {
@@ -304,15 +304,15 @@ mod tests {
 
 fn cmd_publish() -> Result<(), Box<dyn std::error::Error>> {
     let version = read_workspace_version()?;
-    println!("publish: releasing webgate + webgate-mcp v{version} to crates.io");
+    println!("publish: releasing webshift + webshift-mcp v{version} to crates.io");
 
-    run_cmd("cargo", &["publish", "-p", "webgate"])?;
+    run_cmd("cargo", &["publish", "-p", "webshift"])?;
 
     // Give crates.io index time to propagate before publishing the binary
     println!("waiting 15 s for crates.io index…");
     std::thread::sleep(std::time::Duration::from_secs(15));
 
-    run_cmd("cargo", &["publish", "-p", "webgate-mcp"])?;
+    run_cmd("cargo", &["publish", "-p", "webshift-mcp"])?;
 
     println!("published v{version} ✓");
     Ok(())

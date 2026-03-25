@@ -7,7 +7,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  BINARY_NAME: mcp-webgate
+  BINARY_NAME: mcp-webshift
 
 permissions:
   contents: write
@@ -51,11 +51,11 @@ jobs:
 
       - name: Build release binary
         if: "!matrix.use_cross"
-        run: cargo build --release -p webgate-mcp --target ${{ matrix.target }}
+        run: cargo build --release -p webshift-mcp --target ${{ matrix.target }}
 
       - name: Build release binary (cross)
         if: matrix.use_cross
-        run: cross build --release -p webgate-mcp --target ${{ matrix.target }}
+        run: cross build --release -p webshift-mcp --target ${{ matrix.target }}
 
       - name: Rename binary (Unix)
         if: runner.os != 'Windows'
