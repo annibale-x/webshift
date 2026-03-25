@@ -48,6 +48,47 @@ struct Cli {
     /// Log file path (logs to file instead of stderr when set).
     #[arg(long)]
     log_file: Option<String>,
+
+    // --- LLM features ---
+    /// Enable LLM features (expansion, summarization, reranking).
+    #[arg(long)]
+    llm_enabled: Option<bool>,
+
+    /// OpenAI-compatible API base URL (e.g. http://localhost:11434/v1).
+    #[arg(long)]
+    llm_base_url: Option<String>,
+
+    /// LLM API key (leave empty for Ollama/local servers).
+    #[arg(long)]
+    llm_api_key: Option<String>,
+
+    /// Model name to use for LLM calls (e.g. gemma3:27b, gpt-4o).
+    #[arg(long)]
+    llm_model: Option<String>,
+
+    /// Timeout for LLM requests in seconds.
+    #[arg(long)]
+    llm_timeout: Option<u64>,
+
+    /// Auto-expand single queries into complementary variants via LLM.
+    #[arg(long)]
+    llm_expansion_enabled: Option<bool>,
+
+    /// Include Markdown summary with citations in query output.
+    #[arg(long)]
+    llm_summarization_enabled: Option<bool>,
+
+    /// LLM-assisted reranking (deterministic BM25 always active).
+    #[arg(long)]
+    llm_rerank_enabled: Option<bool>,
+
+    /// Max words in LLM summary (0 = derived from budget).
+    #[arg(long)]
+    llm_max_summary_words: Option<usize>,
+
+    /// LLM input budget = max_query_budget × factor.
+    #[arg(long)]
+    llm_input_budget_factor: Option<u32>,
 }
 
 // ---------------------------------------------------------------------------
@@ -338,6 +379,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config.server.log_file = log_file.clone();
     }
 
+    // Apply LLM CLI overrides
+    if let Some(v) = cli.llm_enabled {
+        config.llm.enabled = v;
+    }
+    if let Some(ref v) = cli.llm_base_url {
+        config.llm.base_url = v.clone();
+    }
+    if let Some(ref v) = cli.llm_api_key {
+        config.llm.api_key = v.clone();
+    }
+    if let Some(ref v) = cli.llm_model {
+        config.llm.model = v.clone();
+    }
+    if let Some(v) = cli.llm_timeout {
+        config.llm.timeout = v;
+    }
+    if let Some(v) = cli.llm_expansion_enabled {
+        config.llm.expansion_enabled = v;
+    }
+    if let Some(v) = cli.llm_summarization_enabled {
+        config.llm.summarization_enabled = v;
+    }
+    if let Some(v) = cli.llm_rerank_enabled {
+        config.llm.llm_rerank_enabled = v;
+    }
+    if let Some(v) = cli.llm_max_summary_words {
+        config.llm.max_summary_words = v;
+    }
+    if let Some(v) = cli.llm_input_budget_factor {
+        config.llm.input_budget_factor = v;
+    }
+
     // Setup logging (to file or stderr)
     if config.server.debug || config.server.trace {
         let filter = if config.server.trace {
@@ -487,6 +560,43 @@ mod tests {
         assert!(!cli.debug);
         assert!(!cli.trace);
         assert!(cli.log_file.is_none());
+        assert!(cli.llm_enabled.is_none());
+        assert!(cli.llm_model.is_none());
+        assert!(cli.llm_base_url.is_none());
+    }
+
+    #[test]
+    fn cli_parse_llm_args() {
+        let cli = Cli::parse_from([
+            "mcp-webgate",
+            "--llm-enabled",
+            "true",
+            "--llm-model",
+            "gemma3:27b",
+            "--llm-base-url",
+            "http://localhost:11434/v1",
+            "--llm-timeout",
+            "60",
+            "--llm-expansion-enabled",
+            "true",
+            "--llm-summarization-enabled",
+            "false",
+            "--llm-rerank-enabled",
+            "true",
+            "--llm-max-summary-words",
+            "800",
+        ]);
+        assert_eq!(cli.llm_enabled, Some(true));
+        assert_eq!(cli.llm_model.as_deref(), Some("gemma3:27b"));
+        assert_eq!(
+            cli.llm_base_url.as_deref(),
+            Some("http://localhost:11434/v1")
+        );
+        assert_eq!(cli.llm_timeout, Some(60));
+        assert_eq!(cli.llm_expansion_enabled, Some(true));
+        assert_eq!(cli.llm_summarization_enabled, Some(false));
+        assert_eq!(cli.llm_rerank_enabled, Some(true));
+        assert_eq!(cli.llm_max_summary_words, Some(800));
     }
 
     #[test]

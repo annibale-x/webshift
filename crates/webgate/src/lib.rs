@@ -232,11 +232,32 @@ pub async fn query_with_options(
     };
 
     // Normalize queries, enforce server cap
-    let queries_list: Vec<String> = queries
+    let base_queries: Vec<String> = queries
         .iter()
         .take(cfg.max_search_queries)
         .map(|s| s.to_string())
         .collect();
+
+    // LLM query expansion (single input query → multiple complementary queries)
+    #[cfg(feature = "llm")]
+    let queries_list: Vec<String> = if config.llm.enabled
+        && config.llm.expansion_enabled
+        && base_queries.len() == 1
+    {
+        let llm_client = llm::client::LlmClient::new(&config.llm);
+        let expanded = llm::expander::expand_queries(
+            &base_queries[0],
+            cfg.max_search_queries,
+            &llm_client,
+        )
+        .await;
+        expanded.into_iter().take(cfg.max_search_queries).collect()
+    } else {
+        base_queries
+    };
+
+    #[cfg(not(feature = "llm"))]
+    let queries_list: Vec<String> = base_queries;
 
     if queries_list.is_empty() {
         return Err(WebgateError::Backend("no queries provided".into()));
@@ -442,6 +463,13 @@ pub async fn query_with_options(
         sources = utils::reranker::rerank_deterministic(&queries_list, &sources);
     }
 
+    // Tier-2 rerank: LLM-assisted (opt-in)
+    #[cfg(feature = "llm")]
+    if config.llm.enabled && config.llm.llm_rerank_enabled {
+        let llm_client = llm::client::LlmClient::new(&config.llm);
+        sources = utils::reranker::rerank_llm(&queries_list, &sources, &llm_client).await;
+    }
+
     // Reassign IDs after reranking
     for (i, source) in sources.iter_mut().enumerate() {
         source.id = i + 1;
@@ -461,6 +489,28 @@ pub async fn query_with_options(
 
     let total_chars: usize = sources.iter().map(|s| s.content.len()).sum();
 
+    // LLM summarization
+    #[cfg(feature = "llm")]
+    let (summary, llm_summary_error) = if config.llm.enabled && config.llm.summarization_enabled {
+        let llm_client = llm::client::LlmClient::new(&config.llm);
+        let max_words = if config.llm.max_summary_words > 0 {
+            config.llm.max_summary_words
+        } else {
+            cfg.max_query_budget / 5
+        };
+        match llm::summarizer::summarize_results(&queries_list, &sources, &llm_client, max_words)
+            .await
+        {
+            Ok(s) => (Some(s), None),
+            Err(e) => (None, Some(e.to_string())),
+        }
+    } else {
+        (None, None)
+    };
+
+    #[cfg(not(feature = "llm"))]
+    let (summary, llm_summary_error) = (None::<String>, None::<String>);
+
     Ok(QueryResult {
         queries: queries_list,
         sources,
@@ -473,14 +523,178 @@ pub async fn query_with_options(
             per_page_limit,
             num_results_per_query: nrpq,
         },
-        summary: None,
-        llm_summary_error: None,
+        summary,
+        llm_summary_error,
     })
 }
 
 // ---------------------------------------------------------------------------
 // Integration tests
 // ---------------------------------------------------------------------------
+
+/// Pipeline tests with LLM features enabled (require both `backends` + `llm` features).
+#[cfg(test)]
+#[cfg(all(feature = "backends", feature = "llm"))]
+mod llm_pipeline_tests {
+    use super::*;
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    fn mock_config_with_llm(searxng_url: &str, llm_base_url: &str) -> Config {
+        let mut config = Config::default();
+        config.backends.searxng.url = searxng_url.to_string();
+        config.server.max_result_length = 4000;
+        config.server.max_query_budget = 16000;
+        config.server.max_total_results = 5;
+        config.server.search_timeout = 5;
+        config.llm.enabled = true;
+        config.llm.base_url = llm_base_url.to_string();
+        config.llm.model = "test-model".to_string();
+        config.llm.timeout = 5;
+        config
+    }
+
+    #[tokio::test]
+    async fn pipeline_with_query_expansion() {
+        let search_server = MockServer::start().await;
+        let page_server = MockServer::start().await;
+        let llm_server = MockServer::start().await;
+
+        // LLM returns 2 expanded queries
+        let llm_body = serde_json::json!({
+            "choices": [{"message": {"content": "[\"rust async patterns\", \"tokio runtime tutorial\"]"}}]
+        });
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(&llm_body))
+            .mount(&llm_server)
+            .await;
+
+        // SearXNG returns results
+        let page_url = format!("{}/page1", page_server.uri());
+        let search_body = serde_json::json!({
+            "results": [{"title": "Rust", "url": &page_url, "content": "Rust async"}]
+        });
+        Mock::given(method("GET"))
+            .and(path("/search"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(&search_body))
+            .mount(&search_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/page1"))
+            .respond_with(ResponseTemplate::new(200).set_body_string(
+                "<html><body><p>Rust async programming content.</p></body></html>",
+            ))
+            .mount(&page_server)
+            .await;
+
+        let mut config =
+            mock_config_with_llm(&search_server.uri(), &format!("{}/v1", llm_server.uri()));
+        config.llm.expansion_enabled = true;
+        config.llm.summarization_enabled = false;
+        config.llm.llm_rerank_enabled = false;
+
+        let result = query(&["rust"], &config).await.unwrap();
+
+        // Queries should be expanded (original + variants)
+        assert!(result.queries.len() >= 1);
+        assert_eq!(result.queries[0], "rust");
+        assert!(result.sources.len() >= 1);
+    }
+
+    #[tokio::test]
+    async fn pipeline_with_summarization() {
+        let search_server = MockServer::start().await;
+        let page_server = MockServer::start().await;
+        let llm_server = MockServer::start().await;
+
+        // LLM returns a summary (called once for summarization, expansion disabled)
+        let llm_body = serde_json::json!({
+            "choices": [{"message": {"content": "## Summary\n\nRust is a systems language [1]."}}]
+        });
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(&llm_body))
+            .mount(&llm_server)
+            .await;
+
+        let page_url = format!("{}/page1", page_server.uri());
+        let search_body = serde_json::json!({
+            "results": [{"title": "Rust", "url": &page_url, "content": "Rust systems programming"}]
+        });
+        Mock::given(method("GET"))
+            .and(path("/search"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(&search_body))
+            .mount(&search_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/page1"))
+            .respond_with(ResponseTemplate::new(200).set_body_string(
+                "<html><body><p>Rust is a systems language.</p></body></html>",
+            ))
+            .mount(&page_server)
+            .await;
+
+        let mut config =
+            mock_config_with_llm(&search_server.uri(), &format!("{}/v1", llm_server.uri()));
+        config.llm.expansion_enabled = false;
+        config.llm.summarization_enabled = true;
+        config.llm.llm_rerank_enabled = false;
+
+        let result = query(&["rust"], &config).await.unwrap();
+
+        assert!(result.summary.is_some(), "summary should be present");
+        let summary = result.summary.unwrap();
+        assert!(summary.contains("Summary") || summary.contains("Rust"));
+        assert!(result.llm_summary_error.is_none());
+    }
+
+    #[tokio::test]
+    async fn pipeline_summarization_error_is_captured() {
+        let search_server = MockServer::start().await;
+        let page_server = MockServer::start().await;
+        let llm_server = MockServer::start().await;
+
+        // LLM returns 500 error
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(500))
+            .mount(&llm_server)
+            .await;
+
+        let page_url = format!("{}/page1", page_server.uri());
+        let search_body = serde_json::json!({
+            "results": [{"title": "Test", "url": &page_url, "content": "content"}]
+        });
+        Mock::given(method("GET"))
+            .and(path("/search"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(&search_body))
+            .mount(&search_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/page1"))
+            .respond_with(ResponseTemplate::new(200).set_body_string(
+                "<html><body><p>Content.</p></body></html>",
+            ))
+            .mount(&page_server)
+            .await;
+
+        let mut config =
+            mock_config_with_llm(&search_server.uri(), &format!("{}/v1", llm_server.uri()));
+        config.llm.expansion_enabled = false;
+        config.llm.summarization_enabled = true;
+        config.llm.llm_rerank_enabled = false;
+
+        let result = query(&["test"], &config).await.unwrap();
+
+        // Pipeline succeeds but captures LLM error
+        assert!(result.summary.is_none());
+        assert!(result.llm_summary_error.is_some(), "should capture LLM error");
+    }
+}
 
 #[cfg(test)]
 #[cfg(feature = "backends")]

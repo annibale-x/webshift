@@ -527,6 +527,10 @@ pub struct QueryResult {
 
 ## 9. Milestones
 
+**Dev environment:**
+ - Ollama is available locally at `http://localhost:11434` with model `gemma3:27b` — use for LLM features (expander, summarizer, LLM reranker).
+ - SearXNG is available locally at `https://localhost:4000` — use for backend integration tests.
+
 ### M1 — Core library: fetch + clean (1 week)
 
 - [x] Workspace setup: add `robot` crate, feature flags skeleton, shared version
@@ -565,13 +569,13 @@ pub struct QueryResult {
 
 ### M4 — LLM features (1 week)
 
-- [ ] `llm/client.rs` — OpenAI-compatible async chat client
-- [ ] `llm/expander.rs` — query expansion
-- [ ] `llm/summarizer.rs` — Markdown summary with citations
-- [ ] LLM reranking in `reranker.rs` (behind `llm` feature flag)
-- [ ] Adaptive budget redistribution
-- [ ] Tests: LLM features with mock responses
-- [ ] **Deliverable:** Full feature parity with Python Phase 4
+- [x] `llm/client.rs` — OpenAI-compatible async chat client
+- [x] `llm/expander.rs` — query expansion
+- [x] `llm/summarizer.rs` — Markdown summary with citations
+- [x] LLM reranking in `reranker.rs` (behind `llm` feature flag)
+- [x] Adaptive budget redistribution
+- [x] Tests: LLM features with mock responses
+- [x] **Deliverable:** Full feature parity with Python Phase 4
 
 ### M5 — CI, release, publish (3 days)
 

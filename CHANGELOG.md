@@ -1,5 +1,25 @@
 # Changelog
 
+* **2026-03-25: v0.1.6** - M4 complete — LLM features
+  * feat(llm): `LlmClient` — async OpenAI-compatible chat completions client (reqwest, no SDK dependency)
+  * feat(llm): `expand_queries()` — single query → N complementary queries via LLM, with JSON fence stripping and fallback
+  * feat(llm): `summarize_results()` — Markdown report with inline citations `[1]`, `[2]`, etc.
+  * feat(reranker): `rerank_llm()` — LLM-assisted tier-2 reranking (behind `llm` feature flag), falls back to input order on error
+  * feat(query): LLM expansion integrated before search (single query input, `llm.expansion_enabled`)
+  * feat(query): LLM reranking integrated after BM25 (`llm.llm_rerank_enabled`)
+  * feat(query): LLM summarization integrated after reranking (`llm.summarization_enabled`); errors captured in `llm_summary_error` field
+  * feat(mcp): `--llm-enabled/model/base-url/api-key/timeout/expansion-enabled/summarization-enabled/rerank-enabled/max-summary-words/input-budget-factor` CLI args
+  * feat(mcp): `webgate-mcp` binary now builds with `llm` feature enabled
+  * test(llm): `LlmClient` — content, disabled, HTTP error, API key header (4 tests)
+  * test(llm): expander — variants, n=1 skip, LLM error fallback, markdown fences (4 tests)
+  * test(llm): summarizer — Markdown output, error propagation (2 tests)
+  * test(reranker): `rerank_llm` — LLM judgment ordering, fallback on error (2 tests)
+  * test(pipeline): LLM pipeline — expansion, summarization, error capture (3 tests)
+  * test(mcp): `cli_parse_llm_args` — all LLM CLI flag deserialization (1 test)
+  * docs(plan): check off all M4 tasks
+
+---
+
 * **2026-03-25: v0.1.5** - M3 complete — search backends + query pipeline
   * feat(backends): `SearchBackend` trait + `create_backend` factory with 5 implementations (SearXNG, Brave, Tavily, Exa, SerpAPI)
   * feat(reranker): BM25 deterministic reranking + adaptive budget redistribution
