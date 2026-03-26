@@ -320,16 +320,21 @@ mod tests {
 
 fn cmd_publish() -> Result<(), Box<dyn std::error::Error>> {
     let version = read_workspace_version()?;
-    println!("publish: releasing webshift + webshift-mcp v{version} to crates.io");
+    println!("publish: triggering publish workflow for v{version}");
 
-    run_cmd("cargo", &["publish", "-p", "webshift"])?;
+    run_cmd(
+        "gh",
+        &[
+            "workflow",
+            "run",
+            "publish.yml",
+            "--repo",
+            "annibale-x/webshift",
+            "--ref",
+            "main",
+        ],
+    )?;
 
-    // Give crates.io index time to propagate before publishing the binary
-    println!("waiting 15 s for crates.io index…");
-    std::thread::sleep(std::time::Duration::from_secs(15));
-
-    run_cmd("cargo", &["publish", "-p", "webshift-mcp"])?;
-
-    println!("published v{version} ✓");
+    println!("publish workflow triggered — crates.io + MCP registry will be updated shortly ✓");
     Ok(())
 }
