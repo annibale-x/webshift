@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.5] - 2026-03-26
+
+### Fixed
+
+- Switch `reqwest` from `native-tls` (OpenSSL) to `rustls-tls` to restore pure-Rust build, fixing cross-compilation for `aarch64-unknown-linux-gnu`
+
+---
+
 ## [0.2.4] - 2026-03-26
 
 ### Fixed
