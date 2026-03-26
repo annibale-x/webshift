@@ -91,6 +91,63 @@ struct Cli {
     #[arg(long)]
     log_file: Option<String>,
 
+    // --- Server / anti-flooding caps ---
+    /// Streaming download cap per page in megabytes (WEBSHIFT_MAX_DOWNLOAD_MB).
+    #[arg(long)]
+    max_download_mb: Option<u32>,
+
+    /// Hard character cap per cleaned page (WEBSHIFT_MAX_RESULT_LENGTH).
+    #[arg(long)]
+    max_result_length: Option<usize>,
+
+    /// Per-request timeout in seconds for fetch and search calls (WEBSHIFT_SEARCH_TIMEOUT).
+    #[arg(long)]
+    search_timeout: Option<u64>,
+
+    /// Oversample multiplier: fetch results_per_query * factor candidates (WEBSHIFT_OVERSAMPLING_FACTOR).
+    #[arg(long)]
+    oversampling_factor: Option<u32>,
+
+    /// Replace failed fetches with reserve-pool pages (WEBSHIFT_AUTO_RECOVERY_FETCH).
+    #[arg(long)]
+    auto_recovery_fetch: Option<bool>,
+
+    /// Hard cap on total results returned per query call (WEBSHIFT_MAX_TOTAL_RESULTS).
+    #[arg(long)]
+    max_total_results: Option<usize>,
+
+    /// Total character budget across all sources in a single query (WEBSHIFT_MAX_QUERY_BUDGET).
+    #[arg(long)]
+    max_query_budget: Option<usize>,
+
+    /// Maximum number of search queries per call, including LLM expansions (WEBSHIFT_MAX_SEARCH_QUERIES).
+    #[arg(long)]
+    max_search_queries: Option<usize>,
+
+    /// Results requested per backend query (WEBSHIFT_RESULTS_PER_QUERY).
+    #[arg(long)]
+    results_per_query: Option<usize>,
+
+    /// Comma-separated domain blocklist, e.g. "spam.com,ads.net" (WEBSHIFT_BLOCKED_DOMAINS).
+    #[arg(long)]
+    blocked_domains: Option<String>,
+
+    /// Comma-separated domain allowlist — when set, only these domains pass (WEBSHIFT_ALLOWED_DOMAINS).
+    #[arg(long)]
+    allowed_domains: Option<String>,
+
+    /// Proportional budget allocation after BM25 reranking: auto | on | off (WEBSHIFT_ADAPTIVE_BUDGET).
+    #[arg(long)]
+    adaptive_budget: Option<String>,
+
+    /// Fetch factor for adaptive budget: max_result_length * factor before trimming (WEBSHIFT_ADAPTIVE_BUDGET_FETCH_FACTOR).
+    #[arg(long)]
+    adaptive_budget_fetch_factor: Option<u32>,
+
+    /// Default language tag passed to search backends, e.g. "en", "it" (WEBSHIFT_LANGUAGE).
+    #[arg(long)]
+    language: Option<String>,
+
     // --- LLM features ---
     /// Enable LLM features (expansion, summarization, reranking).
     #[arg(long)]
@@ -449,6 +506,55 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if let Some(ref v) = cli.bing_market {
         config.backends.bing.market = v.clone();
+    }
+
+    // Apply server/anti-flooding CLI overrides
+    if let Some(v) = cli.max_download_mb {
+        config.server.max_download_mb = v;
+    }
+    if let Some(v) = cli.max_result_length {
+        config.server.max_result_length = v;
+    }
+    if let Some(v) = cli.search_timeout {
+        config.server.search_timeout = v;
+    }
+    if let Some(v) = cli.oversampling_factor {
+        config.server.oversampling_factor = v;
+    }
+    if let Some(v) = cli.auto_recovery_fetch {
+        config.server.auto_recovery_fetch = v;
+    }
+    if let Some(v) = cli.max_total_results {
+        config.server.max_total_results = v;
+    }
+    if let Some(v) = cli.max_query_budget {
+        config.server.max_query_budget = v;
+    }
+    if let Some(v) = cli.max_search_queries {
+        config.server.max_search_queries = v;
+    }
+    if let Some(v) = cli.results_per_query {
+        config.server.results_per_query = v;
+    }
+    if let Some(ref v) = cli.blocked_domains {
+        config.server.blocked_domains = v.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+    }
+    if let Some(ref v) = cli.allowed_domains {
+        config.server.allowed_domains = v.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+    }
+    if let Some(ref v) = cli.adaptive_budget {
+        use webshift::config::AdaptiveBudget;
+        config.server.adaptive_budget = match v.to_lowercase().as_str() {
+            "on" | "true" => AdaptiveBudget::On,
+            "off" | "false" => AdaptiveBudget::Off,
+            _ => AdaptiveBudget::Auto,
+        };
+    }
+    if let Some(v) = cli.adaptive_budget_fetch_factor {
+        config.server.adaptive_budget_fetch_factor = v;
+    }
+    if let Some(ref v) = cli.language {
+        config.server.language = v.clone();
     }
 
     // Apply LLM CLI overrides

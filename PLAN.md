@@ -601,9 +601,9 @@ pub struct QueryResult {
 
 ### M6 — Zed extension (optional, 2 days)
 
-- [ ] `integrations/zed/` — WASM extension that downloads the native binary
-- [ ] No stub needed — binary is self-contained
-- [ ] `extension.toml` with minimal settings (backend, config path)
+- [x] `integrations/zed/` — WASM extension that downloads the native binary
+- [x] No stub needed — binary is self-contained
+- [x] `extension.toml` + full settings schema (all CLI flags, passed as args)
 - [ ] **Deliverable:** Zed extension in marketplace
 
 ---

@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.7] - 2026-03-26
+
+### Added
+
+- Zed extension (`integrations/zed/`): WASM context server extension that downloads the native binary from GitHub Releases and passes all settings as CLI arguments
+- `mcp-webshift-mcp` CLI: full server config exposed as CLI flags (`--max-result-length`, `--max-download-mb`, `--search-timeout`, `--oversampling-factor`, `--auto-recovery-fetch`, `--max-total-results`, `--max-query-budget`, `--max-search-queries`, `--results-per-query`, `--blocked-domains`, `--allowed-domains`, `--adaptive-budget`, `--adaptive-budget-fetch-factor`, `--language`)
+
+---
+
 ## [0.2.6] - 2026-03-26
 
 ### Added
