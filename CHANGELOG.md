@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.4] - 2026-03-26
+
+### Fixed
+
+- MCP server now correctly declares tool capabilities (`ServerCapabilities::enable_tools()`), fixing tool discovery in clients that check server capabilities before listing tools
+
+---
+
 ## [0.2.3] - 2026-03-26
 
 ### Added
