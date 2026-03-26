@@ -133,10 +133,8 @@ If you prefer direct control, add to `~/.config/zed/settings.json`:
 {
   "context_servers": {
     "mcp-webshift": {
-      "command": {
-        "path": "mcp-webshift",
-        "args": ["--default-backend", "searxng"]
-      }
+      "command": "mcp-webshift",
+      "args": ["--default-backend", "searxng"]
     }
   }
 }

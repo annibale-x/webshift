@@ -135,10 +135,8 @@ If you prefer not to use the extension, add the server directly to
 {
   "context_servers": {
     "mcp-webshift": {
-      "command": {
-        "path": "mcp-webshift",
-        "args": ["--default-backend", "searxng"]
-      }
+      "command": "mcp-webshift",
+      "args": ["--default-backend", "searxng"]
     }
   }
 }
