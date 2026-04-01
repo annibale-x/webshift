@@ -11,11 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.10] - 2026-04-02
+
+### Changed
+
+- Update remaining GitHub username references from `x-monk` to `x-hannibal`
+
+---
+
 ## [0.2.9] - 2026-04-01
 
 ### Changed
 
-- Update all GitHub URLs, manifest links, and documentation references from `annibale-x` to `x-monk`
+- Update all GitHub URLs, manifest links, and documentation references from `annibale-x` to `x-hannibal`
 
 ---
 
@@ -32,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `server.json` MCP Registry manifest (`io.github.x-monk/webshift`)
+- `server.json` MCP Registry manifest (`io.github.x-hannibal/webshift`)
 - `release.yml` `publish-mcp` job: automatic publish to MCP Registry on every release tag via `mcp-publisher`
 - `robot bump` now updates `server.json` version alongside `Cargo.toml` and `README.md`
 - `docs.rs` badge added to README
@@ -119,7 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment variable prefix: `WEBGATE_*` → `WEBSHIFT_*`
 - MCP tool names: `webshift_onboarding`, `webshift_fetch`, `webshift_query`
 - Error type: `WebgateError` → `WebshiftError`
-- Repository moved to `github.com/x-monk/webshift`
+- Repository moved to `github.com/x-hannibal/webshift`
 
 ### Added
 
@@ -342,22 +350,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release profile with LTO, strip, and size optimization
 - `CLAUDE.md`, `CONTRIBUTING.md`, `PLAN.md`
 
-[Unreleased]: https://github.com/x-monk/webshift/compare/v0.2.5...HEAD
-[0.2.5]: https://github.com/x-monk/webshift/compare/v0.2.4...v0.2.5
-[0.2.4]: https://github.com/x-monk/webshift/compare/v0.2.3...v0.2.4
-[0.2.3]: https://github.com/x-monk/webshift/compare/v0.2.2...v0.2.3
-[0.2.2]: https://github.com/x-monk/webshift/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/x-monk/webshift/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/x-monk/webshift/compare/v0.1.12...v0.2.0
-[0.1.12]: https://github.com/x-monk/webshift/compare/v0.1.11...v0.1.12
-[0.1.11]: https://github.com/x-monk/webshift/compare/v0.1.10...v0.1.11
-[0.1.10]: https://github.com/x-monk/webshift/compare/v0.1.9...v0.1.10
-[0.1.9]: https://github.com/x-monk/webshift/compare/v0.1.8...v0.1.9
-[0.1.8]: https://github.com/x-monk/webshift/compare/v0.1.7...v0.1.8
-[0.1.7]: https://github.com/x-monk/webshift/compare/v0.1.6...v0.1.7
-[0.1.6]: https://github.com/x-monk/webshift/compare/v0.1.5...v0.1.6
-[0.1.5]: https://github.com/x-monk/webshift/compare/v0.1.4...v0.1.5
-[0.1.4]: https://github.com/x-monk/webshift/compare/v0.1.3...v0.1.4
-[0.1.3]: https://github.com/x-monk/webshift/compare/v0.1.2...v0.1.3
-[0.1.2]: https://github.com/x-monk/webshift/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/x-monk/webshift/releases/tag/v0.1.1
+[Unreleased]: https://github.com/x-hannibal/webshift/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/x-hannibal/webshift/compare/v0.2.4...v0.2.5
+[0.2.4]: https://github.com/x-hannibal/webshift/compare/v0.2.3...v0.2.4
+[0.2.3]: https://github.com/x-hannibal/webshift/compare/v0.2.2...v0.2.3
+[0.2.2]: https://github.com/x-hannibal/webshift/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/x-hannibal/webshift/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/x-hannibal/webshift/compare/v0.1.12...v0.2.0
+[0.1.12]: https://github.com/x-hannibal/webshift/compare/v0.1.11...v0.1.12
+[0.1.11]: https://github.com/x-hannibal/webshift/compare/v0.1.10...v0.1.11
+[0.1.10]: https://github.com/x-hannibal/webshift/compare/v0.1.9...v0.1.10
+[0.1.9]: https://github.com/x-hannibal/webshift/compare/v0.1.8...v0.1.9
+[0.1.8]: https://github.com/x-hannibal/webshift/compare/v0.1.7...v0.1.8
+[0.1.7]: https://github.com/x-hannibal/webshift/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/x-hannibal/webshift/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/x-hannibal/webshift/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/x-hannibal/webshift/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/x-hannibal/webshift/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/x-hannibal/webshift/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/x-hannibal/webshift/releases/tag/v0.1.1

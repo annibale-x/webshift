@@ -329,7 +329,7 @@ fn cmd_publish() -> Result<(), Box<dyn std::error::Error>> {
             "run",
             "publish.yml",
             "--repo",
-            "x-monk/webshift",
+            "x-hannibal/webshift",
             "--ref",
             "main",
         ],

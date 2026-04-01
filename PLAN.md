@@ -1,6 +1,6 @@
 # PLAN.RS.md — Rust Port of mcp-webshift
 
-> **Repo:** `x-monk/webshift`
+> **Repo:** `x-hannibal/webshift`
 > **Crates:** `webshift` (library) + `webshift-mcp` (MCP server binary)
 > **Target:** Standalone native binary for AI agents — zero runtime dependencies.
 
@@ -464,7 +464,7 @@ Output: 5 self-contained binaries attached to GitHub Release. No runtime depende
 cargo install webshift-mcp
 
 # From GitHub Release (prebuilt)
-curl -L https://github.com/x-monk/webshift/releases/latest/download/mcp-webshift-x86_64-unknown-linux-gnu -o mcp-webshift
+curl -L https://github.com/x-hannibal/webshift/releases/latest/download/mcp-webshift-x86_64-unknown-linux-gnu -o mcp-webshift
 chmod +x mcp-webshift
 
 # Agent config (Claude Code, Gemini CLI, etc.)
