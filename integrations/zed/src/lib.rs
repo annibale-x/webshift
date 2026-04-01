@@ -4,7 +4,7 @@ use zed_extension_api::{
     Project, Result,
 };
 
-const GITHUB_REPO: &str = "annibale-x/webshift";
+const GITHUB_REPO: &str = "x-monk/webshift";
 const BINARY_NAME: &str = "mcp-webshift";
 const CONTEXT_SERVER_ID: &str = "mcp-webshift";
 
@@ -138,9 +138,9 @@ impl zed::Extension for WebshiftExtension {
         Ok(Some(ContextServerConfiguration {
             installation_instructions:
                 "mcp-webshift is installed automatically from \
-                 [GitHub Releases](https://github.com/annibale-x/webshift/releases).\n\
+                 [GitHub Releases](https://github.com/x-monk/webshift/releases).\n\
                  No manual setup required — the native binary is downloaded on first use.\n\n\
-                 Keys are [CLI arguments](https://github.com/annibale-x/webshift/blob/main/docs/CONFIGURATION.md#cli-arguments-mcp-server-only)."
+                 Keys are [CLI arguments](https://github.com/x-monk/webshift/blob/main/docs/CONFIGURATION.md#cli-arguments-mcp-server-only)."
                     .to_string(),
             settings_schema: include_str!("../assets/settings_schema.json").to_string(),
             default_settings: include_str!("../assets/default_settings.json").to_string(),
