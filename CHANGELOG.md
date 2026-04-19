@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.13] - 2026-04-20
+
+### Fixed
+
+- `text-map` feature broken in published crate: `textmap.rs`, test fixtures, and `integration_textmap.rs` were untracked and excluded from the crates.io package
+
+---
+
 ## [0.2.12] - 2026-04-20
 
 ### Fixed
