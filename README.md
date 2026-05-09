@@ -2,7 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/webshift.svg)](https://crates.io/crates/webshift)
 [![docs.rs](https://img.shields.io/docsrs/webshift)](https://docs.rs/webshift)
-[![Latest Release](https://img.shields.io/badge/release-v0.2.13-purple.svg)](https://github.com/x-hannibal/webshift/releases/tag/v0.2.13)
+[![Latest Release](https://img.shields.io/badge/release-v0.2.14-purple.svg)](https://github.com/x-hannibal/webshift/releases/tag/v0.2.14)
 [![Beta](https://img.shields.io/badge/status-beta-blue.svg)](https://github.com/x-hannibal/webshift/issues)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/x-hannibal/webshift/blob/main/LICENSE)
 <!--[![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-blueviolet)](https://modelcontextprotocol.io/specification/2025-11-25)-->
@@ -340,6 +340,13 @@ let page = fetch("https://example.com", &config).await?;
 let results = query(&["rust async programming"], &config).await?;
 for source in &results.sources {
     println!("[{}] {} — {} chars", source.id, source.title, source.content.len());
+}
+
+// Backend partial failures (CAPTCHA, rate-limits, engine outages) are surfaced
+// in `warnings` rather than as Err. Empty sources + non-empty warnings means
+// "all backends blocked" — distinct from a legitimate "no matches found".
+if results.sources.is_empty() && !results.warnings.is_empty() {
+    eprintln!("all backends failed: {:?}", results.warnings);
 }
 ```
 

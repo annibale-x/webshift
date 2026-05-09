@@ -4,7 +4,7 @@
 //! Engine ID (`WEBSHIFT_GOOGLE_CX`). Free tier: 100 queries/day.
 //! Create a CSE at <https://programmablesearchengine.google.com/>.
 
-use super::{SearchBackend, SearchResult};
+use super::{BackendResponse, SearchBackend, SearchResult};
 use crate::config::GoogleConfig;
 
 #[derive(Debug)]
@@ -58,7 +58,7 @@ impl SearchBackend for GoogleBackend {
         query: &str,
         num_results: usize,
         lang: Option<&str>,
-    ) -> Result<Vec<SearchResult>, crate::WebshiftError> {
+    ) -> Result<BackendResponse, crate::WebshiftError> {
         // Google CSE max is 10 per request; we cap at 10
         let count = num_results.min(10);
         let mut params = vec![
@@ -111,7 +111,7 @@ impl SearchBackend for GoogleBackend {
             });
         }
 
-        Ok(results)
+        Ok(BackendResponse::ok(results))
     }
 }
 
@@ -166,7 +166,7 @@ mod tests {
         let backend = GoogleBackend::new(&test_config("test-key", "test-cx"))
             .unwrap()
             .with_base_url(mock_server.uri());
-        let results = backend.search("rust", 2, None).await.unwrap();
+        let results = backend.search("rust", 2, None).await.unwrap().results;
 
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].title, "Rust Lang");
@@ -190,7 +190,7 @@ mod tests {
         let backend = GoogleBackend::new(&test_config("test-key", "test-cx"))
             .unwrap()
             .with_base_url(mock_server.uri());
-        let results = backend.search("rust", 20, None).await.unwrap();
+        let results = backend.search("rust", 20, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -211,7 +211,7 @@ mod tests {
         let backend = GoogleBackend::new(&test_config("test-key", "test-cx"))
             .unwrap()
             .with_base_url(mock_server.uri());
-        let results = backend.search("noresults", 5, None).await.unwrap();
+        let results = backend.search("noresults", 5, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -231,7 +231,7 @@ mod tests {
         let backend = GoogleBackend::new(&test_config("test-key", "test-cx"))
             .unwrap()
             .with_base_url(mock_server.uri());
-        let results = backend.search("noresults", 5, None).await.unwrap();
+        let results = backend.search("noresults", 5, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -275,7 +275,7 @@ mod tests {
         let backend = GoogleBackend::new(&test_config("test-key", "test-cx"))
             .unwrap()
             .with_base_url(mock_server.uri());
-        let results = backend.search("rust", 10, Some("it")).await.unwrap();
+        let results = backend.search("rust", 10, Some("it")).await.unwrap().results;
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Rust IT");

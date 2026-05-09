@@ -2,7 +2,7 @@
 //!
 //! Requires a free-tier API key (WEBSHIFT_BRAVE_API_KEY).
 
-use super::{SearchBackend, SearchResult};
+use super::{BackendResponse, SearchBackend, SearchResult};
 use crate::config::BraveConfig;
 
 #[derive(Debug)]
@@ -43,7 +43,7 @@ impl SearchBackend for BraveBackend {
         query: &str,
         num_results: usize,
         lang: Option<&str>,
-    ) -> Result<Vec<SearchResult>, crate::WebshiftError> {
+    ) -> Result<BackendResponse, crate::WebshiftError> {
         let safesearch = match self.safesearch.min(2) {
             0 => "off",
             1 => "moderate",
@@ -103,7 +103,7 @@ impl SearchBackend for BraveBackend {
             });
         }
 
-        Ok(results)
+        Ok(BackendResponse::ok(results))
     }
 }
 
@@ -157,7 +157,7 @@ mod tests {
             .await;
 
         let backend = mock_backend(&mock_server.uri(), 1);
-        let results = backend.search("rust", 2, None).await.unwrap();
+        let results = backend.search("rust", 2, None).await.unwrap().results;
 
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].title, "Rust Lang");
@@ -179,7 +179,7 @@ mod tests {
             .await;
 
         let backend = mock_backend(&mock_server.uri(), 1);
-        let results = backend.search("noresults", 5, None).await.unwrap();
+        let results = backend.search("noresults", 5, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -221,7 +221,7 @@ mod tests {
             .await;
 
         let backend = mock_backend(&mock_server.uri(), 1);
-        let results = backend.search("rust", 10, Some("it")).await.unwrap();
+        let results = backend.search("rust", 10, Some("it")).await.unwrap().results;
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Rust IT");
@@ -242,7 +242,7 @@ mod tests {
             .await;
 
         let backend = mock_backend(&mock_server.uri(), 1);
-        let results = backend.search("rust", 50, None).await.unwrap();
+        let results = backend.search("rust", 50, None).await.unwrap().results;
 
         assert!(results.is_empty()); // mock returned none, just verifying the cap was sent
     }
@@ -261,7 +261,7 @@ mod tests {
             .await;
 
         let backend = mock_backend(&mock_server.uri(), 1);
-        let results = backend.search("rust", 5, None).await.unwrap();
+        let results = backend.search("rust", 5, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }

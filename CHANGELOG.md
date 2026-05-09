@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.14] - 2026-05-09
+
+### Added
+
+- `QueryResult.warnings: Vec<String>` field carrying non-fatal backend failures (SearXNG engine errors, individual query backend HTTP failures) so callers can distinguish "no matches found" from "all engines blocked" (issue #1)
+- `BackendResponse { results, warnings }` struct returned by the `SearchBackend` trait, replacing the previous `Vec<SearchResult>` return type
+- SearXNG backend now parses engine-failure fields from the JSON response and surfaces them as warnings. Covers both the mainline shape (`unresponsive_engines` and `errors` as arrays of `[engine_name, reason]` tuples — verified against `searxng/2026.5.9+0cba32c15`) and the alternate shape (`error_msgs` / `unresponsive_msgs` as flat string arrays) for fork compatibility
+- MCP `webshift_query` tool returns `isError: true` with an `"all search backends failed"` payload when sources are empty AND warnings are present; partial failures (some sources, some warnings) flow through as success with warnings exposed in the response JSON
+
+### Changed
+
+- `SearchBackend::search()` trait method return type changed from `Result<Vec<SearchResult>, _>` to `Result<BackendResponse, _>` (breaking for external implementors of the trait)
+- Pipeline previously logged backend errors via `tracing::warn!` and discarded them — they are now collected into `QueryResult.warnings`
+
+---
+
 ## [0.2.13] - 2026-04-20
 
 ### Fixed

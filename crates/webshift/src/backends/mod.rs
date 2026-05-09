@@ -24,7 +24,38 @@ pub struct SearchResult {
     pub snippet: String,
 }
 
+/// Response from a backend search call: results plus any non-fatal warnings.
+///
+/// Warnings carry information about partial failures that did not prevent the
+/// backend from returning a (possibly empty) result list — for example, a
+/// SearXNG meta-search where individual upstream engines hit CAPTCHA or
+/// rate-limits while others responded normally. The pipeline aggregates these
+/// into [`crate::QueryResult::warnings`] so the caller can distinguish "no
+/// matches" from "all engines blocked".
+#[derive(Debug, Clone)]
+pub struct BackendResponse {
+    pub results: Vec<SearchResult>,
+    pub warnings: Vec<String>,
+}
+
+impl BackendResponse {
+    /// Convenience constructor for the common case of no warnings.
+    pub fn ok(results: Vec<SearchResult>) -> Self {
+        Self {
+            results,
+            warnings: Vec::new(),
+        }
+    }
+}
+
 /// Abstract search backend interface.
+///
+/// Implementors return a [`BackendResponse`]: the result list plus any
+/// non-fatal warnings (engine-side failures, partial outages). Reserve
+/// `Err` for failures that prevent any meaningful response — HTTP non-2xx
+/// from the backend itself, parse errors, network errors. Per-engine or
+/// per-source failures inside a successful HTTP response belong in
+/// `warnings`, not `Err`.
 #[cfg_attr(docsrs, doc(cfg(feature = "backends")))]
 #[async_trait::async_trait]
 pub trait SearchBackend: Send + Sync {
@@ -33,7 +64,7 @@ pub trait SearchBackend: Send + Sync {
         query: &str,
         num_results: usize,
         lang: Option<&str>,
-    ) -> Result<Vec<SearchResult>, crate::WebshiftError>;
+    ) -> Result<BackendResponse, crate::WebshiftError>;
 }
 
 /// Create a backend from config. Returns a boxed trait object.
