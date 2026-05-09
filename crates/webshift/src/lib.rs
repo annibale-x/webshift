@@ -555,7 +555,7 @@ pub async fn query_with_options(
     // from "all engines blocked" (see issue #1).
     let mut result_lists: Vec<Vec<BackendResult>> = Vec::new();
     let mut warnings: Vec<String> = Vec::new();
-    for (q, r) in queries_list.iter().zip(results_per_query.into_iter()) {
+    for (q, r) in queries_list.iter().zip(results_per_query) {
         match r {
             Ok(resp) => {
                 for w in resp.warnings {
