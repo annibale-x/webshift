@@ -23,7 +23,7 @@
 
 use std::collections::HashMap;
 
-use super::{SearchBackend, SearchResult};
+use super::{BackendResponse, SearchBackend, SearchResult};
 use crate::config::HttpBackendConfig;
 
 #[derive(Debug)]
@@ -69,7 +69,7 @@ impl SearchBackend for HttpBackend {
         query: &str,
         num_results: usize,
         lang: Option<&str>,
-    ) -> Result<Vec<SearchResult>, crate::WebshiftError> {
+    ) -> Result<BackendResponse, crate::WebshiftError> {
         let cfg = &self.config;
 
         // Build query params
@@ -139,7 +139,7 @@ impl SearchBackend for HttpBackend {
             });
         }
 
-        Ok(results)
+        Ok(BackendResponse::ok(results))
     }
 }
 
@@ -183,7 +183,7 @@ mod tests {
             .await;
 
         let backend = HttpBackend::new(&base_config(&url)).unwrap();
-        let results = backend.search("rust", 5, None).await.unwrap();
+        let results = backend.search("rust", 5, None).await.unwrap().results;
 
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].title, "Rust Lang");
@@ -216,7 +216,7 @@ mod tests {
             ..Default::default()
         };
         let backend = HttpBackend::new(&config).unwrap();
-        let results = backend.search("test", 10, None).await.unwrap();
+        let results = backend.search("test", 10, None).await.unwrap().results;
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Nested Result");
@@ -242,7 +242,7 @@ mod tests {
             ..Default::default()
         };
         let backend = HttpBackend::new(&config).unwrap();
-        let results = backend.search("test", 10, None).await.unwrap();
+        let results = backend.search("test", 10, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -270,7 +270,7 @@ mod tests {
             ..Default::default()
         };
         let backend = HttpBackend::new(&config).unwrap();
-        let results = backend.search("test", 10, None).await.unwrap();
+        let results = backend.search("test", 10, None).await.unwrap().results;
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Custom Title");
@@ -299,7 +299,7 @@ mod tests {
             ..Default::default()
         };
         let backend = HttpBackend::new(&config).unwrap();
-        let results = backend.search("test", 10, None).await.unwrap();
+        let results = backend.search("test", 10, None).await.unwrap().results;
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "POST Result");
@@ -330,7 +330,7 @@ mod tests {
             ..Default::default()
         };
         let backend = HttpBackend::new(&config).unwrap();
-        let results = backend.search("test", 10, None).await.unwrap();
+        let results = backend.search("test", 10, None).await.unwrap().results;
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Authed");
@@ -360,7 +360,7 @@ mod tests {
             ..Default::default()
         };
         let backend = HttpBackend::new(&config).unwrap();
-        let results = backend.search("test", 5, None).await.unwrap();
+        let results = backend.search("test", 5, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -386,7 +386,7 @@ mod tests {
             ..Default::default()
         };
         let backend = HttpBackend::new(&config).unwrap();
-        let results = backend.search("test", 5, None).await.unwrap();
+        let results = backend.search("test", 5, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -405,7 +405,7 @@ mod tests {
             .await;
 
         let backend = HttpBackend::new(&base_config(&url)).unwrap();
-        let results = backend.search("noresults", 5, None).await.unwrap();
+        let results = backend.search("noresults", 5, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -450,7 +450,7 @@ mod tests {
             ..Default::default()
         };
         let backend = HttpBackend::new(&config).unwrap();
-        let results = backend.search("test", 10, Some("it")).await.unwrap();
+        let results = backend.search("test", 10, Some("it")).await.unwrap().results;
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Italian");
@@ -473,7 +473,7 @@ mod tests {
 
         let backend = HttpBackend::new(&base_config(&url)).unwrap();
         // Passing lang="it" but lang_param is empty, so it should be omitted
-        let results = backend.search("test", 5, Some("it")).await.unwrap();
+        let results = backend.search("test", 5, Some("it")).await.unwrap().results;
 
         assert!(results.is_empty());
     }

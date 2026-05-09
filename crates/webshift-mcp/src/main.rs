@@ -306,7 +306,9 @@ impl WebshiftServer {
                         "sources": "Fetched and cleaned pages. Each has: id, title, url, snippet, content, truncated.",
                         "snippet_pool": "Extra results from oversampling reserve — snippet only, no full fetch. Check this BEFORE calling webshift_fetch again.",
                         "stats": "fetched, failed, gap_filled, total_chars, per_page_limit, num_results_per_query.",
+                        "warnings": "Non-fatal backend failures (e.g. SearXNG engines hitting CAPTCHA / rate-limits). Present only when populated. If sources is non-empty + warnings non-empty, the search succeeded with partial coverage.",
                     },
+                    "error_semantics": "Returns isError=true ONLY when sources is empty AND warnings is non-empty (all backends blocked). Empty sources + empty warnings = legitimate 'no matches found' (success).",
                 },
                 "webshift_fetch": {
                     "purpose": "Retrieve and clean a single URL you already know.",
@@ -377,6 +379,24 @@ impl WebshiftServer {
         .await
         {
             Ok(result) => {
+                // Distinguish "no matches found" from "all backends blocked".
+                // When the search returned zero usable sources but the backend
+                // reported non-fatal warnings (e.g. SearXNG engines hitting
+                // CAPTCHA / rate-limits — see issue #1), surface this as an
+                // explicit error so the calling agent doesn't interpret it as
+                // a legitimate empty result. Partial failures with at least one
+                // source still flow through as success with `warnings` populated.
+                if result.sources.is_empty() && !result.warnings.is_empty() {
+                    let error_json = serde_json::json!({
+                        "error": "all search backends failed",
+                        "queries": queries_refs,
+                        "warnings": result.warnings,
+                    });
+                    return Ok(CallToolResult::error(vec![Content::text(
+                        serde_json::to_string(&error_json).unwrap(),
+                    )]));
+                }
+
                 let json = serde_json::to_string(&result)
                     .unwrap_or_else(|e| format!("{{\"error\": \"{e}\"}}"));
                 Ok(CallToolResult::success(vec![Content::text(json)]))

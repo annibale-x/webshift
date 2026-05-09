@@ -4,7 +4,7 @@
 //! because webshift handles query expansion itself.
 //! Requires WEBSHIFT_EXA_API_KEY.
 
-use super::{SearchBackend, SearchResult};
+use super::{BackendResponse, SearchBackend, SearchResult};
 use crate::config::ExaConfig;
 
 #[derive(Debug)]
@@ -43,7 +43,7 @@ impl SearchBackend for ExaBackend {
         query: &str,
         num_results: usize,
         lang: Option<&str>,
-    ) -> Result<Vec<SearchResult>, crate::WebshiftError> {
+    ) -> Result<BackendResponse, crate::WebshiftError> {
         let _ = lang; // Exa doesn't support language parameter
 
         let payload = serde_json::json!({
@@ -106,7 +106,7 @@ impl SearchBackend for ExaBackend {
             });
         }
 
-        Ok(results)
+        Ok(BackendResponse::ok(results))
     }
 }
 
@@ -177,7 +177,7 @@ mod tests {
             .await;
 
         let backend = mock_backend(&mock_server.uri());
-        let results = backend.search("rust", 2, None).await.unwrap();
+        let results = backend.search("rust", 2, None).await.unwrap().results;
 
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].title, "Rust Lang");
@@ -200,7 +200,7 @@ mod tests {
             .await;
 
         let backend = mock_backend(&mock_server.uri());
-        let results = backend.search("noresults", 5, None).await.unwrap();
+        let results = backend.search("noresults", 5, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -244,7 +244,7 @@ mod tests {
             .await;
 
         let backend = mock_backend(&mock_server.uri());
-        let results = backend.search("rust", 10, Some("it")).await.unwrap();
+        let results = backend.search("rust", 10, Some("it")).await.unwrap().results;
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Rust");
@@ -264,7 +264,7 @@ mod tests {
 
         let backend = mock_backend(&mock_server.uri());
         // Request 50 — payload should contain numResults: 10 (capped).
-        let results = backend.search("rust", 50, None).await.unwrap();
+        let results = backend.search("rust", 50, None).await.unwrap().results;
 
         assert!(results.is_empty());
 
@@ -309,7 +309,7 @@ mod tests {
             .await;
 
         let backend = mock_backend(&mock_server.uri());
-        let results = backend.search("test", 10, None).await.unwrap();
+        let results = backend.search("test", 10, None).await.unwrap().results;
 
         assert_eq!(results.len(), 3);
         // First result: highlights present → use highlight.

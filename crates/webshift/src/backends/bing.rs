@@ -4,7 +4,7 @@
 //! Free tier: 1,000 queries/month (S1 tier).
 //! Create a key at <https://www.microsoft.com/en-us/bing/apis/bing-web-search-api>.
 
-use super::{SearchBackend, SearchResult};
+use super::{BackendResponse, SearchBackend, SearchResult};
 use crate::config::BingConfig;
 
 #[derive(Debug)]
@@ -53,7 +53,7 @@ impl SearchBackend for BingBackend {
         query: &str,
         num_results: usize,
         lang: Option<&str>,
-    ) -> Result<Vec<SearchResult>, crate::WebshiftError> {
+    ) -> Result<BackendResponse, crate::WebshiftError> {
         // Bing supports up to 50 results per request
         let count = num_results.min(50);
         let mkt = if let Some(lang) = lang {
@@ -111,7 +111,7 @@ impl SearchBackend for BingBackend {
             });
         }
 
-        Ok(results)
+        Ok(BackendResponse::ok(results))
     }
 }
 
@@ -159,7 +159,7 @@ mod tests {
         let backend = BingBackend::new(&test_config("test-key"))
             .unwrap()
             .with_base_url(mock_server.uri());
-        let results = backend.search("rust", 2, None).await.unwrap();
+        let results = backend.search("rust", 2, None).await.unwrap().results;
 
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].title, "Rust Lang");
@@ -182,7 +182,7 @@ mod tests {
         let backend = BingBackend::new(&test_config("test-key"))
             .unwrap()
             .with_base_url(mock_server.uri());
-        let results = backend.search("rust", 100, None).await.unwrap();
+        let results = backend.search("rust", 100, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -203,7 +203,7 @@ mod tests {
         let backend = BingBackend::new(&test_config("test-key"))
             .unwrap()
             .with_base_url(mock_server.uri());
-        let results = backend.search("noresults", 5, None).await.unwrap();
+        let results = backend.search("noresults", 5, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -223,7 +223,7 @@ mod tests {
         let backend = BingBackend::new(&test_config("test-key"))
             .unwrap()
             .with_base_url(mock_server.uri());
-        let results = backend.search("noresults", 5, None).await.unwrap();
+        let results = backend.search("noresults", 5, None).await.unwrap().results;
 
         assert!(results.is_empty());
     }
@@ -270,7 +270,7 @@ mod tests {
         let backend = BingBackend::new(&test_config("test-key"))
             .unwrap()
             .with_base_url(mock_server.uri());
-        let results = backend.search("rust", 10, Some("it")).await.unwrap();
+        let results = backend.search("rust", 10, Some("it")).await.unwrap().results;
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Rust IT");

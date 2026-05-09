@@ -71,6 +71,23 @@ For client-specific setup (Claude Desktop, Claude Code, Zed, Cursor, Windsurf, V
 | `lang` | string | none | Language filter (e.g. `"en"`) |
 | `backend` | string | config default | Override search backend for this call |
 
+#### Response shape
+
+On success, returns JSON with:
+
+| Field | Description |
+|-------|-------------|
+| `sources` | Fetched and cleaned pages (`id`, `title`, `url`, `snippet`, `content`, `truncated`) |
+| `snippet_pool` | Oversampled reserve — snippet only, no full fetch |
+| `stats` | `fetched`, `failed`, `gap_filled`, `total_chars`, etc. |
+| `warnings` | Non-fatal backend failures (omitted when empty) — e.g. SearXNG engine CAPTCHA / rate-limit |
+
+#### Error semantics
+
+- `isError: true` is returned **only** when `sources` is empty *and* `warnings` is non-empty (all backends blocked). The error payload echoes the queries and the collected warnings so the agent can decide whether to retry, switch backend, or give up.
+- Empty `sources` with empty `warnings` is a normal success ("no matches found").
+- Partial failures (some sources, some warnings) flow through as success with `warnings` populated — inspect this field if your agent needs to detect degraded coverage.
+
 ### `webshift_fetch`
 
 | Parameter | Type | Description |

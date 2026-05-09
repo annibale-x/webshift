@@ -341,6 +341,13 @@ let results = query(&["rust async programming"], &config).await?;
 for source in &results.sources {
     println!("[{}] {} — {} chars", source.id, source.title, source.content.len());
 }
+
+// Backend partial failures (CAPTCHA, rate-limits, engine outages) are surfaced
+// in `warnings` rather than as Err. Empty sources + non-empty warnings means
+// "all backends blocked" — distinct from a legitimate "no matches found".
+if results.sources.is_empty() && !results.warnings.is_empty() {
+    eprintln!("all backends failed: {:?}", results.warnings);
+}
 ```
 
 ### Text-map: rewrite HTML content without breaking markup

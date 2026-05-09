@@ -252,6 +252,16 @@ pub struct QueryResult {
     pub snippet_pool: Vec<SnippetEntry>,
     /// Pipeline execution statistics.
     pub stats: Stats,
+    /// Non-fatal backend warnings collected during search.
+    ///
+    /// Carries partial-failure information that did not abort the pipeline:
+    /// e.g. SearXNG meta-search engines hitting CAPTCHA or rate-limits, or
+    /// a backend call returning an error while sibling queries succeeded.
+    /// Empty in the typical success case. When `sources` is empty AND this is
+    /// non-empty, the caller should treat it as "all backends blocked" rather
+    /// than "no matches found" (see issue #1).
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub warnings: Vec<String>,
     /// LLM-generated summary with citations (requires `llm` feature).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub summary: Option<String>,
@@ -442,6 +452,15 @@ pub async fn fetch(url: &str, config: &Config) -> Result<FetchResult, WebshiftEr
 /// cleans them, reranks by BM25, and returns structured content with snippet pool.
 ///
 /// Requires the `backends` feature (enabled by default).
+///
+/// # Partial failures
+///
+/// Per-query backend errors and engine-level warnings (e.g. SearXNG meta-search
+/// engines hitting CAPTCHA / rate-limits) do **not** abort the pipeline — they
+/// are collected into [`QueryResult::warnings`] alongside any results that did
+/// come back. Only configuration errors and total backend instantiation
+/// failures return `Err`. Inspect `warnings` to distinguish "no matches found"
+/// from "all engines blocked".
 #[cfg(feature = "backends")]
 #[cfg_attr(docsrs, doc(cfg(feature = "backends")))]
 pub async fn query(queries: &[&str], config: &Config) -> Result<QueryResult, WebshiftError> {
@@ -453,6 +472,9 @@ pub async fn query(queries: &[&str], config: &Config) -> Result<QueryResult, Web
 /// - `num_results_per_query`: results per query (default: config value)
 /// - `lang`: language filter
 /// - `backend_name`: override the default backend
+///
+/// See [`query`] for the partial-failure contract — backend warnings are
+/// surfaced in [`QueryResult::warnings`] rather than as `Err`.
 #[cfg(feature = "backends")]
 #[cfg_attr(docsrs, doc(cfg(feature = "backends")))]
 pub async fn query_with_options(
@@ -528,13 +550,24 @@ pub async fn query_with_options(
 
     let results_per_query = futures::future::join_all(search_futures).await;
 
-    // Flatten in round-robin order so no single query dominates
+    // Flatten in round-robin order so no single query dominates.
+    // Collect non-fatal warnings so the caller can distinguish "no matches"
+    // from "all engines blocked" (see issue #1).
     let mut result_lists: Vec<Vec<BackendResult>> = Vec::new();
-    for r in results_per_query {
+    let mut warnings: Vec<String> = Vec::new();
+    for (q, r) in queries_list.iter().zip(results_per_query.into_iter()) {
         match r {
-            Ok(list) => result_lists.push(list),
+            Ok(resp) => {
+                for w in resp.warnings {
+                    tracing::warn!("backend warning for query {q:?}: {w}");
+                    warnings.push(w);
+                }
+                result_lists.push(resp.results);
+            }
             Err(e) => {
-                tracing::warn!("backend search error: {e}");
+                let msg = format!("backend search failed for query {q:?}: {e}");
+                tracing::warn!("{msg}");
+                warnings.push(msg);
             }
         }
     }
@@ -801,6 +834,7 @@ pub async fn query_with_options(
             num_results_per_query: nrpq,
             raw_bytes,
         },
+        warnings,
         summary,
         llm_summary_error,
     })
@@ -1266,6 +1300,108 @@ mod pipeline_tests {
         assert_eq!(result.sources.len(), 3);
         // Reserve pool should have the remaining
         assert!(result.snippet_pool.len() > 0, "snippet pool should have reserves");
+    }
+
+    // Regression tests for issue #1: SearXNG engine errors must be surfaced
+    // through the pipeline so the caller can distinguish "no matches found"
+    // from "all engines blocked".
+
+    #[tokio::test]
+    async fn pipeline_propagates_searxng_engine_warnings_with_empty_results() {
+        let search_server = MockServer::start().await;
+
+        // SearXNG returns 200 with zero results but populated error fields —
+        // exactly the silent-failure scenario from the bug report. Real
+        // SearXNG uses `unresponsive_engines` and `errors` as arrays of
+        // [engine_name, reason] tuples.
+        let search_body = serde_json::json!({
+            "results": [],
+            "unresponsive_engines": [
+                ["brave", "Suspended: too many requests"],
+                ["duckduckgo", "SearxEngineNetworkError: timeout"]
+            ],
+            "errors": [
+                ["startpage", "SearxEngineCaptchaException: redirected to captcha"]
+            ]
+        });
+
+        Mock::given(method("GET"))
+            .and(path("/search"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(&search_body))
+            .mount(&search_server)
+            .await;
+
+        let config = mock_config(&search_server.uri());
+        let result = query(&["rust"], &config).await.unwrap();
+
+        assert!(result.sources.is_empty());
+        assert_eq!(result.warnings.len(), 3);
+        assert!(result.warnings.iter().any(|w| w.contains("startpage")));
+        assert!(result.warnings.iter().any(|w| w.contains("brave")));
+        assert!(result.warnings.iter().any(|w| w.contains("duckduckgo")));
+    }
+
+    #[tokio::test]
+    async fn pipeline_partial_engine_failures_keep_results_and_warnings() {
+        let search_server = MockServer::start().await;
+        let page_server = MockServer::start().await;
+        let page_url = format!("{}/page", page_server.uri());
+
+        // One engine succeeds and returns a usable result, another fails.
+        // Caller must see BOTH the source AND the warning — partial failure is
+        // not an error.
+        let search_body = serde_json::json!({
+            "results": [
+                {"title": "Rust", "url": &page_url, "content": "Rust lang"}
+            ],
+            "unresponsive_engines": [
+                ["brave", "Suspended: too many requests"]
+            ]
+        });
+
+        Mock::given(method("GET"))
+            .and(path("/search"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(&search_body))
+            .mount(&search_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/page"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_string("<html><body><p>Rust content</p></body></html>"),
+            )
+            .mount(&page_server)
+            .await;
+
+        let config = mock_config(&search_server.uri());
+        let result = query(&["rust"], &config).await.unwrap();
+
+        assert_eq!(result.sources.len(), 1);
+        assert_eq!(result.warnings.len(), 1);
+        assert!(result.warnings[0].contains("brave"));
+    }
+
+    #[tokio::test]
+    async fn pipeline_backend_http_error_becomes_warning() {
+        // When the backend itself errors (HTTP 500, network failure), the
+        // pipeline must record this as a warning rather than swallowing it
+        // silently with a tracing::warn!.
+        let search_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/search"))
+            .respond_with(ResponseTemplate::new(500))
+            .mount(&search_server)
+            .await;
+
+        let config = mock_config(&search_server.uri());
+        let result = query(&["rust"], &config).await.unwrap();
+
+        assert!(result.sources.is_empty());
+        assert_eq!(result.warnings.len(), 1);
+        assert!(result.warnings[0].contains("rust"));
+        assert!(result.warnings[0].contains("500"));
     }
 }
 
