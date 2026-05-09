@@ -254,12 +254,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn searxng_surfaces_engine_errors() {
-        // Regression test for issue #1: when SearXNG upstream engines fail
-        // (CAPTCHA, rate-limit, 403), the JSON response includes `error_msgs`
-        // and `unresponsive_msgs` alongside an empty `results` array. The
-        // backend must surface these as warnings so the pipeline can
-        // distinguish "no matches" from "all engines blocked".
+    async fn searxng_surfaces_legacy_string_msg_format() {
+        // Compatibility test for the alternate JSON shape mentioned in issue
+        // #1 (`error_msgs` / `unresponsive_msgs` as flat string arrays).
+        // Mainline SearXNG (verified against `2026.5.9+0cba32c15`) uses
+        // `unresponsive_engines` tuples instead — covered by the
+        // `searxng_surfaces_unresponsive_engines_tuple_format` test below.
+        // We support both so a fork that exposes either shape is handled.
         let mock_server = MockServer::start().await;
 
         let body = serde_json::json!({
